@@ -18,6 +18,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1024.0",
     "dotenv": "^16.0.0",
     "openapi-fetch": "^0.17.0"
   },
