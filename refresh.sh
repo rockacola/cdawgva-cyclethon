@@ -34,7 +34,7 @@ run() {
   cd "$DIR" || exit 1
   git add webapp/src/data/donations.json
   git commit -m "chore: refresh donation data $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  git push origin main
+  git push origin main 2>&1
   echo "Pushed to main."
 
   echo "[END] $(date -u +%Y-%m-%dT%H:%M:%SZ)"
