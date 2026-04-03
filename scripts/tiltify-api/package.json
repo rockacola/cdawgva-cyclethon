@@ -8,6 +8,8 @@
     "start": "node dist/index.js",
     "get-user-by-slug": "ts-node src/get-user-by-slug.ts",
     "get-user-campaigns": "ts-node src/get-user-campaigns.ts",
+    "get-campaign": "ts-node src/get-campaign.ts",
+    "get-campaign-donations": "ts-node src/get-campaign-donations.ts",
     "generate:types": "openapi-typescript https://v5api.tiltify.com/api/public/openapi -o src/types/api.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
