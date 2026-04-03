@@ -4,8 +4,8 @@ import { MAX_PAGES, TARGET_URL } from './constants';
 import { Donation } from './types';
 
 // Scrapes all donation rows visible in the current table page
-async function scrapeCurrentPage(page: Page): Promise<Omit<Donation, 'scraped_at'>[]> {
-  return page.evaluate((): Omit<Donation, 'scraped_at'>[] => {
+async function scrapeCurrentPage(page: Page): Promise<Omit<Donation, 'index' | 'scraped_at'>[]> {
+  return page.evaluate((): Omit<Donation, 'index' | 'scraped_at'>[] => {
     const tables = Array.from(document.querySelectorAll('table'));
 
     // Find the table that has the expected donation columns (Name, Amount, Comment, Incentives)
@@ -55,9 +55,9 @@ async function scrapeCurrentPage(page: Page): Promise<Omit<Donation, 'scraped_at
 }
 
 // Navigates through all pages up to MAX_PAGES and returns deduplicated raw donations
-export async function scrapeAllPages(): Promise<Omit<Donation, 'scraped_at'>[]> {
+export async function scrapeAllPages(): Promise<Omit<Donation, 'index' | 'scraped_at'>[]> {
   const browser = await chromium.launch({ headless: true });
-  const allRawDonations: Omit<Donation, 'scraped_at'>[] = [];
+  const allRawDonations: Omit<Donation, 'index' | 'scraped_at'>[] = [];
 
   try {
     const page = await browser.newPage();

@@ -11,7 +11,8 @@ import { Donation } from './types';
     console.log('Launching browser...');
     const rawDonations = await scrapeAllPages();
 
-    const donations: Donation[] = rawDonations.map((d) => ({
+    const donations: Donation[] = rawDonations.map((d, i) => ({
+      index: i + 1, // 1-based
       ...d,
       scraped_at: scrapedAt,
     }));
