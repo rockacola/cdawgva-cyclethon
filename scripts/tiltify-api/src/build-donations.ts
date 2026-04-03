@@ -52,6 +52,12 @@ interface ConsolidatedOutput {
 
     merged.sort((a, b) => b.completed_at.localeCompare(a.completed_at));
 
+    // TODO (phase 2): Cap donations written to webapp at a reasonable limit (e.g. 500-1000)
+    // to keep donations.json small and fast to load. With 5-6 digit total donations expected,
+    // the full dataset will be too large for a static JSON file.
+    // The full archive remains available in output/ snapshots.
+    // Consider: merged.slice(0, 1000) or a configurable MAX_DONATIONS constant.
+
     console.log(`${merged.length} unique donations after dedup.`);
 
     const output: ConsolidatedOutput = {
