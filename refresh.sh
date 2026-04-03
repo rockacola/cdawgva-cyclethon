@@ -32,6 +32,7 @@ run() {
 
   echo "--- Step 3: commit & push ---"
   cd "$DIR" || exit 1
+  git pull --rebase origin main 2>&1
   git add webapp/src/data/donations.json
   git commit -m "chore: refresh donation data $(date -u +%Y-%m-%dT%H:%M:%SZ)"
   git push origin main 2>&1
