@@ -2,7 +2,7 @@
 
 Next.js 15 web app for the CDawgVA Cyclethon 5 donation tracker, deployed to Vercel.
 
-The app is fully statically rendered — donation data is baked into `src/data/donations.json` at release time by `scripts/tiltify-api/build-donations`, so there is no runtime data fetching.
+The app is fully statically rendered — donation data is baked into `src/data/donations.json` at release time by `scripts/tiltify-api/build-donations`, so there is no runtime data fetching. The `generated_at` field in that file drives the **Last checked** timestamp shown on the page.
 
 ## Requirements
 
