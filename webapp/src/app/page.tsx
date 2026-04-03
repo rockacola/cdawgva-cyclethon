@@ -21,7 +21,7 @@ export default function HomePage() {
 
         {!!generated_at && (
           <Text color="gray.500" fontSize="sm" mb={8}>
-            Last updated: <RelativeTime iso={generated_at} showUTC />
+            Last checked: <RelativeTime iso={generated_at} showUTC />
           </Text>
         )}
 
