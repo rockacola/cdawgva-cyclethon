@@ -11,6 +11,7 @@
     "get-campaign": "ts-node src/get-campaign.ts",
     "get-campaign-donations": "ts-node src/get-campaign-donations.ts",
     "fetch-donations": "NODE_NO_WARNINGS=1 ts-node src/fetch-donations.ts",
+    "build-donations": "ts-node src/build-donations.ts",
     "generate:types": "openapi-typescript https://v5api.tiltify.com/api/public/openapi -o src/types/api.ts",
     "lint": "eslint .",
     "format": "prettier --write .",
