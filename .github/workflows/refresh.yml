@@ -1,0 +1,36 @@
+name: Refresh donations
+
+on:
+  schedule:
+    # GitHub Actions minimum cron interval is 5 minutes.
+    # During peak (live event), consider a paid solution for sub-5-min refresh.
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # allow manual trigger from GitHub Actions UI
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+          cache-dependency-path: scripts/tiltify-api/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: scripts/tiltify-api
+
+      - name: Fetch and upload donations to R2
+        run: npm run fetch-donations
+        working-directory: scripts/tiltify-api
+        env:
+          TILTIFY_CLIENT_ID: ${{ secrets.TILTIFY_CLIENT_ID }}
+          TILTIFY_CLIENT_SECRET: ${{ secrets.TILTIFY_CLIENT_SECRET }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
