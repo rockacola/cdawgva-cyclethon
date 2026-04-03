@@ -87,7 +87,16 @@ async function scrapeDonations(): Promise<void> {
   console.log(`Saved to ${outputPath}`);
 }
 
-scrapeDonations().catch((err) => {
-  console.error('Error:', err);
-  process.exit(1);
-});
+(async () => {
+  console.log(`[START] ${new Date().toISOString()}`);
+
+  try {
+    await scrapeDonations();
+  } catch (err) {
+    console.error('Error:', err);
+    console.error(`[END]   ${new Date().toISOString()}`);
+    process.exit(1);
+  }
+
+  console.log(`[END]   ${new Date().toISOString()}`);
+})();

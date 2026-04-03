@@ -45,6 +45,25 @@ Each donation entry in the JSON looks like:
 
 `is_sticky` marks the pinned top donation (identified by the trophy icon on the page).
 
+## Running on a schedule (cron)
+
+A `run.sh` script is provided that handles timestamped log output. To run every minute via crontab:
+
+```bash
+crontab -e
+```
+
+Add:
+
+```
+* * * * * /Users/travis/repos/github/rockacola/cdawgva-cyclethon/scripts/tiltify-page-scrap/run.sh
+```
+
+Logs are written to:
+
+- `logs/run_YYYYMMDD_HHmmss.log` — stdout
+- `errors/error_YYYYMMDD_HHmmss.err` — stderr
+
 ## Other scripts
 
 ```bash
