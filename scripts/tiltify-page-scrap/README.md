@@ -1,6 +1,8 @@
 # tiltify-page-scrap
 
-Scrapes the **Live Donations** table from the [CDawgVA Cyclethon 5](https://tiltify.com/@cdawgva/cyclethon-5) Tiltify campaign page and saves the results as a timestamped JSON file.
+Scrapes the **Live Donations** table from the [CDawgVA Cyclethon 5](https://tiltify.com/@cdawgva/cyclethon-5) Tiltify campaign page using Playwright and saves the results as timestamped JSON files.
+
+> **Note:** This script was used for early exploration before the Tiltify API integration was established. The canonical data source is now `scripts/tiltify-api`.
 
 Each run produces a new file under `output/` named `donations_YYYYMMDD_HHmmss.json`.
 
@@ -33,6 +35,7 @@ Each donation entry in the JSON looks like:
 
 ```json
 {
+  "index": 1,
   "name": "bakahashi",
   "amount": 150,
   "amount_label": "$150.00",

@@ -1,8 +1,11 @@
 # tiltify-api
 
-Queries the **Tiltify V5 API** for the [CDawgVA Cyclethon 5](https://tiltify.com/@cdawgva/cyclethon-5) campaign and saves donation snapshots as timestamped JSON files.
+Polls the **Tiltify V5 API** for the [CDawgVA Cyclethon 5](https://tiltify.com/@cdawgva/cyclethon-5) campaign and saves donation snapshots as timestamped JSON files.
 
-Each run of `fetch-donations` produces a new file under `output/` named `donations_YYYYMMDD_HHmmss.json`.
+There are two main scripts:
+
+- **`fetch-donations`** — run on a cron to collect snapshots into `output/`
+- **`build-donations`** — run before a release to merge all snapshots into `webapp/src/data/donations.json`
 
 ## Requirements
 
@@ -36,13 +39,16 @@ TILTIFY_CLIENT_SECRET=your_client_secret_here
 ## Usage
 
 ```bash
-# Fetch and save the latest donations
+# Fetch and save the latest donations (run on a cron)
 npm run fetch-donations
+
+# Merge all snapshots into webapp/src/data/donations.json (run before release)
+npm run build-donations
 ```
 
 ### Exploration scripts
 
-These were used to discover campaign and user IDs — not needed for regular polling:
+These were used to discover campaign and user IDs — not needed for regular use:
 
 ```bash
 npm run get-user-by-slug       # Look up CDawgVA's user ID by slug
@@ -51,9 +57,9 @@ npm run get-campaign           # Get details for Cyclethon 5
 npm run get-campaign-donations # List donations with raw API response
 ```
 
-## Output
+## Snapshot output
 
-Each snapshot file contains a `fetched_at` timestamp and an array of donations:
+Each file saved by `fetch-donations` under `output/` is named `donations_YYYYMMDD_HHmmss.json` and contains a `fetched_at` timestamp and the latest 100 donations:
 
 ```json
 {
@@ -61,24 +67,24 @@ Each snapshot file contains a `fetched_at` timestamp and an array of donations:
   "donations": [
     {
       "id": "abc123",
+      "created_at": "2026-04-03T11:58:00.000Z",
       "completed_at": "2026-04-03T11:59:00.000Z",
       "amount": {
         "value": "150.00",
         "currency": "USD"
       },
       "donor_name": "bakahashi",
-      "donor_comment": "Let's go!",
-      "is_match": false
+      "donor_comment": "Let's go!"
     }
   ]
 }
 ```
 
-Each run fetches the latest 100 donations. As long as fewer than 100 donations come in between runs, no donations will be missed across snapshots.
+As long as fewer than 100 donations come in between runs, no donations will be missed across snapshots. `build-donations` handles deduplication across all collected snapshots.
 
-## Running on a schedule (cron)
+## Running fetch-donations on a schedule (cron)
 
-A `run.sh` script is provided that handles timestamped log output. To run every 5 minutes via crontab:
+A `run.sh` script is provided that handles timestamped log output and prevents overlapping runs. To run every 5 minutes via crontab:
 
 ```bash
 crontab -e
