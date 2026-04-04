@@ -1,3 +1,10 @@
+// DEPRECATED: This script was used when the webapp lived in this repo and consumed a
+// static donations.json at build time. The webapp has since moved to a separate repo
+// (cdawgva-cyclethon-app) and now fetches live data from Cloudflare R2.
+//
+// fetch-donations.ts now handles the full pipeline: fetch from Tiltify → merge → upload to R2.
+// This script is no longer part of any workflow and will be removed in a future cleanup.
+
 import * as fs from 'fs';
 import * as path from 'path';
 
