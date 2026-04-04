@@ -54,12 +54,9 @@ async function fetchNewDonations(client: TiltifyClient, since?: string): Promise
 
     const donations = ((data.data ?? []) as ApiDonation[]).map((d) => ({
       id: d.id ?? '',
-      created_at: d.created_at ?? '',
-      completed_at: d.completed_at ?? '',
-      amount: {
-        value: d.amount?.value ?? '0',
-        currency: d.amount?.currency ?? 'USD',
-      },
+      completed_at: Math.floor(new Date(d.completed_at ?? 0).getTime() / 1000),
+      amount_cent: Math.round(parseFloat(d.amount?.value ?? '0') * 100),
+      amount_currency: d.amount?.currency ?? 'USD',
       donor_name: d.donor_name ?? '',
       donor_comment: d.donor_comment ?? null,
     }));
@@ -91,8 +88,8 @@ async function fetchNewDonations(client: TiltifyClient, since?: string): Promise
     // Step 2: Determine since timestamp with overlap buffer
     let since: string | undefined;
     if (existingDonations.length > 0) {
-      const latestCompletedAt = existingDonations[0].completed_at; // sorted DESC
-      since = new Date(new Date(latestCompletedAt).getTime() - OVERLAP_BUFFER_MS).toISOString();
+      const latestCompletedAt = existingDonations[0].completed_at; // sorted DESC, unix seconds
+      since = new Date(latestCompletedAt * 1000 - OVERLAP_BUFFER_MS).toISOString();
       console.log(`Fetching donations since ${since}...`);
     } else {
       console.log('No existing data — fetching full history...');
@@ -126,7 +123,7 @@ async function fetchNewDonations(client: TiltifyClient, since?: string): Promise
       }
     }
 
-    merged.sort((a, b) => b.completed_at.localeCompare(a.completed_at));
+    merged.sort((a, b) => b.completed_at - a.completed_at);
     console.log(`${addedCount} new donation(s) added. Total: ${merged.length}.`);
 
     // Step 6: Upload full dataset to R2

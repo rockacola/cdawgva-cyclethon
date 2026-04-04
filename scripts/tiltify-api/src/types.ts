@@ -1,13 +1,8 @@
-export interface DonationAmount {
-  value: string;
-  currency: string;
-}
-
 export interface SavedDonation {
   id: string;
-  created_at: string;
-  completed_at: string;
-  amount: DonationAmount;
+  completed_at: number;
+  amount_cent: number;
+  amount_currency: string;
   donor_name: string;
   donor_comment: string | null;
 }
