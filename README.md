@@ -1,27 +1,23 @@
 # cdawgva-cyclethon
 
-Data collection pipeline for the [CDawgVA Cyclethon 5](https://tiltify.com/@cdawgva/cyclethon-5) charity event on Tiltify.
+Live donation data pipeline for the [CDawgVA Cyclethon 5](https://tiltify.com/@cdawgva/cyclethon-5) charity fundraiser. Fetches donation data from the Tiltify API on a continuous schedule and publishes it to Cloudflare R2 for consumption by a companion web app.
 
 The web app lives in a separate repo: [cdawgva-cyclethon-app](https://github.com/rockacola/cdawgva-cyclethon-app).
 
-## Structure
+## Architecture
 
 ```
-├── refresh.sh              # Local convenience script for manual fetch runs
-├── .github/workflows/
-│   └── refresh.yml         # GitHub Actions cron — runs every 5 minutes
-└── scripts/
-    ├── tiltify-api/        # Polls the Tiltify V5 API, uploads donations to Cloudflare R2
-    └── tiltify-page-scrap/ # Early exploration scraper via Playwright (superseded)
+.github/workflows/refresh.yml   automated pipeline, triggers every 5 minutes
+refresh.sh                      manual trigger for local use
+scripts/tiltify-api/            production pipeline: Tiltify API to Cloudflare R2
+scripts/tiltify-page-scrap/     early exploration scraper via Playwright (superseded)
 ```
 
 ## How it works
 
-GitHub Actions runs `fetch-donations` every 5 minutes — fetching new donations from Tiltify, merging them into the full dataset, and uploading to Cloudflare R2. The web app fetches directly from R2 and polls every 30 seconds.
+GitHub Actions triggers the fetch pipeline every 5 minutes. Each run pulls donations newer than the previous run, merges them into the running dataset, and publishes the result to Cloudflare R2. The web app reads directly from R2 and refreshes every 30 seconds.
 
-See [`scripts/tiltify-api`](scripts/tiltify-api/README.md) for setup and details.
+## Scripts
 
-## Sub-project READMEs
-
-- [`scripts/tiltify-api`](scripts/tiltify-api/README.md)
-- [`scripts/tiltify-page-scrap`](scripts/tiltify-page-scrap/README.md)
+- [tiltify-api](scripts/tiltify-api/README.md)
+- [tiltify-page-scrap](scripts/tiltify-page-scrap/README.md)
