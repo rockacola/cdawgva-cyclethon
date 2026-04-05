@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
+import { buildStats } from './build-stats';
 import { createApiClient } from './client';
 import { CYCLETHON_5_CAMPAIGN_ID, OUTPUT_DIR } from './constants';
 import { downloadJSON, uploadJSON } from './r2';
@@ -146,6 +147,9 @@ async function fetchNewDonations(client: TiltifyClient, since?: string): Promise
       await uploadJSON(key, latestData);
       console.log(`Uploaded ${key} (${latestData.donations.length} donations).`);
     }
+
+    // Step 8: Build and upload donation stats (daily totals, cumulative, grouped by JST date)
+    await buildStats();
   } catch (err) {
     console.error('Error:', err);
     console.error(`[END]   ${new Date().toISOString()}`);
