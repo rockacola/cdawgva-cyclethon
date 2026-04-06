@@ -1,6 +1,6 @@
-import 'dotenv/config';
-
+import { CYCLETHON_5_CAMPAIGN_ID } from './constants';
 import { downloadJSON, uploadJSON } from './r2';
+import { setup } from './setup';
 import { SavedDonation } from './types';
 
 const R2_KEY_FULL = 'donations-full.json';
@@ -24,12 +24,21 @@ interface DailyTotal {
   cumulative_by_currency: Record<string, CurrencyTotal>;
 }
 
+interface CampaignSnapshot {
+  fetched_at: string;
+  amount_raised_cent: number;
+  amount_raised_currency: string;
+  goal_cent: number;
+  goal_currency: string;
+}
+
 interface StatsOutput {
   _meta: {
     generated_at: string;
     timezone: string;
     utc_offset: string;
   };
+  campaign: CampaignSnapshot;
   stats: {
     daily_totals: DailyTotal[];
   };
@@ -41,11 +50,42 @@ function toJstDateString(unixSeconds: number): string {
 }
 
 export async function buildStats(): Promise<void> {
+  const client = await setup();
+
+  console.log('Fetching campaign data...');
+  const { data: campaignData, error: campaignError } = await client.GET(
+    '/api/public/campaigns/{campaign_id}',
+    { params: { path: { campaign_id: CYCLETHON_5_CAMPAIGN_ID } } },
+  );
+
+  if (campaignError) {
+    throw new Error(`Campaign API error: ${JSON.stringify(campaignError)}`);
+  }
+
+  const campaign = campaignData?.data;
+
+  if (!campaign) {
+    throw new Error('No campaign data returned');
+  }
+
+  const campaignSnapshot: CampaignSnapshot = {
+    fetched_at: new Date().toISOString(),
+    amount_raised_cent: Math.round(parseFloat(campaign.amount_raised?.value ?? '0') * 100),
+    amount_raised_currency: campaign.amount_raised?.currency ?? 'USD',
+    goal_cent: Math.round(parseFloat(campaign.goal?.value ?? '0') * 100),
+    goal_currency: campaign.goal?.currency ?? 'USD',
+  };
+
   console.log('Downloading donations-full.json from R2...');
   const full = await downloadJSON<FullData>(R2_KEY_FULL);
 
   if (!full || full.donations.length === 0) {
-    console.log('No donations found — skipping stats build.');
+    console.log('No donations found — uploading campaign snapshot only.');
+    await uploadJSON(R2_KEY_STATS, {
+      _meta: { generated_at: new Date().toISOString(), timezone: 'Asia/Tokyo', utc_offset: '+09:00' },
+      campaign: campaignSnapshot,
+      stats: { daily_totals: [] },
+    });
     return;
   }
 
@@ -102,6 +142,7 @@ export async function buildStats(): Promise<void> {
       timezone: 'Asia/Tokyo',
       utc_offset: '+09:00',
     },
+    campaign: campaignSnapshot,
     stats: {
       daily_totals: dailyTotals,
     },
