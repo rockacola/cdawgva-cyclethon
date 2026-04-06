@@ -9,6 +9,7 @@
     "get-user-by-slug": "ts-node src/get-user-by-slug.ts",
     "get-user-campaigns": "ts-node src/get-user-campaigns.ts",
     "get-campaign": "ts-node src/get-campaign.ts",
+    "get-campaign-stats": "ts-node src/get-campaign-stats.ts",
     "get-campaign-donations": "ts-node src/get-campaign-donations.ts",
     "fetch-donations": "NODE_NO_WARNINGS=1 ts-node src/fetch-donations.ts",
     "build-donations": "ts-node src/build-donations.ts",
