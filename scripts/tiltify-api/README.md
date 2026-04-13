@@ -29,12 +29,13 @@ npm run fetch-donations
 
 ## R2 Output
 
-| File                        | Contents                                                         |
-| --------------------------- | ---------------------------------------------------------------- |
-| `donations-full.json`       | Complete history, source of truth for the next run               |
-| `donations-latest-100.json` | Latest 100 donations                                             |
-| `donations-latest-500.json` | Latest 500 donations                                             |
-| `donations-stats.json`      | Aggregated daily totals + live campaign snapshot (goal, raised)  |
+| File                        | Contents                                                        |
+| --------------------------- | --------------------------------------------------------------- |
+| `donations-full.json`       | Complete history, source of truth for the next run              |
+| `donations-latest-100.json` | Latest 100 donations                                            |
+| `donations-latest-500.json` | Latest 500 donations                                            |
+| `donations-stats.json`      | Aggregated daily totals + live campaign snapshot (goal, raised) |
+| `donations-YYYY-MM-DD.json` | All donations for a single JST day (2026-04-05 ~ 2026-04-19)    |
 
 A local snapshot of each run's raw API response is saved to `output/` as a backup. These files are gitignored.
 

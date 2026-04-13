@@ -6,6 +6,7 @@ import { createApiClient } from './client';
 import { CYCLETHON_5_CAMPAIGN_ID, OUTPUT_DIR } from './constants';
 import { downloadJSON, uploadJSON } from './r2';
 import { setup } from './setup';
+import { buildDailySnapshots } from './snapshot-by-date';
 import { DonationsSnapshot, SavedDonation } from './types';
 import type { components } from './types/api';
 import { formatTimestamp } from './utils';
@@ -150,6 +151,10 @@ async function fetchNewDonations(client: TiltifyClient, since?: string): Promise
 
     // Step 8: Build and upload donation stats (daily totals, cumulative, grouped by JST date)
     await buildStats();
+
+    // Step 9: Build and upload daily donation snapshots for completed event days (JST)
+    console.log('Building daily snapshots...');
+    await buildDailySnapshots();
   } catch (err) {
     console.error('Error:', err);
     console.error(`[END]   ${new Date().toISOString()}`);

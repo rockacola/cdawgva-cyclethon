@@ -82,7 +82,11 @@ export async function buildStats(): Promise<void> {
   if (!full || full.donations.length === 0) {
     console.log('No donations found — uploading campaign snapshot only.');
     await uploadJSON(R2_KEY_STATS, {
-      _meta: { generated_at: new Date().toISOString(), timezone: 'Asia/Tokyo', utc_offset: '+09:00' },
+      _meta: {
+        generated_at: new Date().toISOString(),
+        timezone: 'Asia/Tokyo',
+        utc_offset: '+09:00',
+      },
       campaign: campaignSnapshot,
       stats: { daily_totals: [] },
     });
