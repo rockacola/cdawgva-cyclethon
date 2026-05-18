@@ -2,3 +2,4 @@ logs/
 errors/
 .refresh.lock
 backups/
+.claude/
