@@ -1,0 +1,28 @@
+# Secrets and credentials
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Operational data (large, runtime-generated)
+backups/
+logs/
+errors/
+**/logs/
+**/errors/
+**/output/
+
+# Build artifacts
+dist/
+build/
+.cache/
+
+# OS and editor
+.DS_Store
+*.swp
