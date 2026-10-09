@@ -11,8 +11,8 @@ Goal: flatten both into standalone TypeScript scripts under one root-level `scri
 Decisions already confirmed with the user:
 - Go all-in on ESM + native Node TS execution (not a minimal CommonJS-preserving move).
 - Drop `scripts/tiltify-api/src/build-donations.ts` — it's self-labeled `DEPRECATED`, wired into no npm script or CI, and writes to a `../../../webapp/` path that no longer exists in this repo.
-- Migrate `tiltify-page-scrap` forward as a working standalone script (not dropped), even though it's superseded by the API pipeline.
-- Bash/system scripts (`refresh.sh`, `backup-r2.sh`, and the two per-project `run.sh`) move into a new `bin/` dir.
+- Drop `scripts/tiltify-page-scrap/` entirely (reversed from an earlier draft that planned to migrate it forward). Git history confirms it was a same-day PoC: commit `310daa8` (2026-04-03) added it, and `5bc24df` added the Tiltify API pipeline later that same day. No commits have touched it since except repo-wide config sweeps — it was never used in production, immediately superseded by the API approach. Not migrated; the whole directory (including its `playwright` dependency) is deleted.
+- Bash/system scripts (`refresh.sh`, `backup-r2.sh`, and `scripts/tiltify-api/run.sh`) move into a new `bin/` dir.
 - Local snapshot/output files move from a bare `output/` into `data/output/`; a `data/inbox/` dir is also scaffolded (gitignored, for future user-provided input files — nothing currently populates it, no code change needed beyond the `.gitignore` entry and documenting it).
 
 ## Current structure (before) — snapshot as of 2026-10-09
@@ -58,19 +58,18 @@ Decisions already confirmed with the user:
     │       ├── types.ts                          SavedDonation, DonationsSnapshot
     │       ├── types/api.ts                      generated OpenAPI types
     │       └── utils.ts                          formatTimestamp (duplicated in page-scrap)
-    └── tiltify-page-scrap/                       superseded Playwright scraper, own package.json
+    └── tiltify-page-scrap/                       UNUSED same-day PoC, superseded by tiltify-api, deleted wholesale (not migrated)
         ├── .gitignore / .prettierrc / .tool-versions / eslint.config.mjs / tsconfig.json
         ├── package.json / package-lock.json / node_modules/
         ├── README.md
-        ├── run.sh                               cron entry, hardcoded ts-node shim path
-        ├── output/, logs/, errors/              runtime, gitignored
+        ├── run.sh
         └── src/
-            ├── index.ts                          entry point (IIFE, CommonJS)
-            ├── scraper.ts                        Playwright page-scraping logic
-            ├── storage.ts                        writes donations to output/
-            ├── constants.ts                      TARGET_URL, MAX_PAGES, OUTPUT_DIR
-            ├── types.ts                          Donation interface
-            └── utils.ts                          formatTimestamp (duplicated in tiltify-api)
+            ├── index.ts
+            ├── scraper.ts
+            ├── storage.ts
+            ├── constants.ts
+            ├── types.ts
+            └── utils.ts                          formatTimestamp (duplicate of tiltify-api's, irrelevant now)
 ```
 
 ## Old path → new path mapping (reference for updating anything that still points at the old layout)
@@ -81,14 +80,13 @@ Decisions already confirmed with the user:
 | `scripts/tiltify-api/.env.example` | `.env.example` |
 | `scripts/tiltify-api/package.json` + `scripts/tiltify-page-scrap/package.json` | `package.json` (merged) |
 | `scripts/tiltify-api/tsconfig.json` + `scripts/tiltify-page-scrap/tsconfig.json` | `tsconfig.json` (merged) |
-| `scripts/tiltify-api/eslint.config.mjs` (= page-scrap's, identical) | `eslint.config.mjs` |
-| `scripts/tiltify-api/.prettierrc` (= page-scrap's, identical) | `.prettierrc` |
-| `scripts/tiltify-api/.tool-versions` / `scripts/tiltify-page-scrap/.tool-versions` | deleted, root `.tool-versions` already existed |
+| `scripts/tiltify-api/eslint.config.mjs` | `eslint.config.mjs` |
+| `scripts/tiltify-api/.prettierrc` | `.prettierrc` |
+| `scripts/tiltify-api/.tool-versions` | deleted, root `.tool-versions` already existed |
 | `scripts/tiltify-api/docs/api-overview.md` | `docs/api-overview.md` |
 | `scripts/tiltify-api/docs/cdawgva-campaigns.md` | `docs/cdawgva-campaigns.md` |
-| `scripts/tiltify-api/README.md`, `scripts/tiltify-page-scrap/README.md` | content folded into root `README.md`/`docs/`, files deleted |
+| `scripts/tiltify-api/README.md` | content folded into root `README.md`/`docs/`, file deleted |
 | `scripts/tiltify-api/run.sh` | `bin/run-fetch-donations.sh` |
-| `scripts/tiltify-page-scrap/run.sh` | `bin/run-scrape-live-donations.sh` |
 | `refresh.sh` (root) | `bin/refresh.sh` |
 | `backup-r2.sh` (root) | `bin/backup-r2.sh` |
 | `scripts/tiltify-api/src/fetch-donations.ts` | `scripts/fetch-donations.ts` |
@@ -107,15 +105,11 @@ Decisions already confirmed with the user:
 | `scripts/tiltify-api/src/constants.ts` | `scripts/lib/constants.ts` |
 | `scripts/tiltify-api/src/types.ts` | `scripts/lib/types.ts` |
 | `scripts/tiltify-api/src/types/api.ts` | `scripts/lib/types/api.ts` |
-| `scripts/tiltify-api/src/utils.ts` + `scripts/tiltify-page-scrap/src/utils.ts` | `scripts/lib/format-timestamp.ts` (merged, byte-identical) |
-| `scripts/tiltify-page-scrap/src/index.ts` | `scripts/scrape-live-donations.ts` |
-| `scripts/tiltify-page-scrap/src/scraper.ts` | `scripts/lib/scrape-scraper.ts` |
-| `scripts/tiltify-page-scrap/src/storage.ts` | `scripts/lib/scrape-storage.ts` |
-| `scripts/tiltify-page-scrap/src/constants.ts` | `scripts/lib/scrape-constants.ts` |
-| `scripts/tiltify-page-scrap/src/types.ts` | `scripts/lib/scrape-types.ts` |
-| `scripts/tiltify-api/output/` + `scripts/tiltify-page-scrap/output/` | `data/output/` |
+| `scripts/tiltify-api/src/utils.ts` | `scripts/lib/format-timestamp.ts` |
+| `scripts/tiltify-api/output/` | `data/output/` |
 | (none — new) | `data/inbox/` (scaffolded, unused) |
-| `scripts/tiltify-api/logs/`, `scripts/tiltify-api/errors/`, `scripts/tiltify-page-scrap/logs/`, `scripts/tiltify-page-scrap/errors/` | root `logs/`, `errors/` (already existed, now the only copies) |
+| `scripts/tiltify-api/logs/`, `scripts/tiltify-api/errors/` | root `logs/`, `errors/` (already existed, now the only copies) |
+| `scripts/tiltify-page-scrap/` (entire directory) | **deleted** — unused same-day PoC, see Context |
 
 ## Target structure
 
@@ -133,7 +127,6 @@ bin/
   refresh.sh                        moved+adapted from root refresh.sh (manual local trigger)
   backup-r2.sh                      moved+adapted from root backup-r2.sh
   run-fetch-donations.sh            moved+adapted from scripts/tiltify-api/run.sh
-  run-scrape-live-donations.sh      moved+adapted from scripts/tiltify-page-scrap/run.sh
 docs/
   overview.md                       structure tree + architecture updated
   getting-started.md                install/run instructions updated for root package
@@ -148,9 +141,8 @@ scripts/
   get-campaign.ts                   exploration script
   get-campaign-stats.ts             exploration script
   get-campaign-donations.ts         exploration script
-  scrape-live-donations.ts          entry script, was tiltify-page-scrap/src/index.ts
   lib/
-    format-timestamp.ts             shared util, dedup'd from both projects' utils.ts
+    format-timestamp.ts             shared util, was tiltify-api/src/utils.ts
     constants.ts                    was tiltify-api/src/constants.ts
     types.ts                        was tiltify-api/src/types.ts
     types/api.ts                    generated OpenAPI types, was tiltify-api/src/types/api.ts
@@ -158,22 +150,18 @@ scripts/
     client.ts                       was tiltify-api/src/client.ts
     setup.ts                        was tiltify-api/src/setup.ts
     r2.ts                           was tiltify-api/src/r2.ts
-    scrape-constants.ts             was tiltify-page-scrap/src/constants.ts
-    scrape-types.ts                 was tiltify-page-scrap/src/types.ts
-    scrape-scraper.ts               was tiltify-page-scrap/src/scraper.ts
-    scrape-storage.ts               was tiltify-page-scrap/src/storage.ts
 data/                                gitignored wholesale (not committed, created at runtime)
   output/                           local run snapshots (was per-project output/)
   inbox/                            scaffolded for future user-provided input files (unused for now)
 logs/, errors/                      already exist at root, now the only copies, created at runtime
 ```
 
-Everything under `scripts/tiltify-api/` and `scripts/tiltify-page-scrap/` (including their `node_modules`, `package-lock.json`, `dist`, `.tool-versions`, `.prettierrc`, `eslint.config.mjs`, per-project `logs/`/`errors/`/`output/`, and `README.md`) is deleted once content is migrated. `build-donations.ts` is dropped entirely (not migrated).
+`scripts/tiltify-api/` is deleted once its content has been migrated per the mapping above (its `node_modules`, `package-lock.json`, `.tool-versions`, `.prettierrc`, `eslint.config.mjs`, `logs/`/`errors/`/`output/`, and `README.md` are not carried forward individually — superseded by the merged root equivalents). `scripts/tiltify-page-scrap/` is deleted wholesale, nothing migrated. `build-donations.ts` is dropped entirely (not migrated).
 
 ## package.json (root)
 
-Merge dependencies (no version conflicts between the two):
-- `dependencies`: `@aws-sdk/client-s3`, `dotenv`, `openapi-fetch`, `playwright`
+Dependencies carried forward from `tiltify-api` only (`tiltify-page-scrap` and its `playwright` dependency are dropped):
+- `dependencies`: `@aws-sdk/client-s3`, `dotenv`, `openapi-fetch`
 - `devDependencies`: `@eslint/js`, `@types/node`, `eslint`, `eslint-config-prettier`, `eslint-plugin-import`, `openapi-typescript`, `prettier`, `typescript`, `typescript-eslint`
 - Drop `ts-node` (no longer used) and `globals` (manga-sync-v2's config doesn't need it — `typescript-eslint`'s recommended config already turns off `no-undef`; verify via lint run, fall back to keeping `globals.node` in `languageOptions` if `console`/`process`/`fetch` trigger false positives)
 
@@ -192,8 +180,7 @@ Scripts, following the `node --disable-warning=ExperimentalWarning scripts/<file
 "get-user-campaigns": "node --disable-warning=ExperimentalWarning scripts/get-user-campaigns.ts",
 "get-campaign": "node --disable-warning=ExperimentalWarning scripts/get-campaign.ts",
 "get-campaign-stats": "node --disable-warning=ExperimentalWarning scripts/get-campaign-stats.ts",
-"get-campaign-donations": "node --disable-warning=ExperimentalWarning scripts/get-campaign-donations.ts",
-"scrape-live-donations": "node --disable-warning=ExperimentalWarning scripts/scrape-live-donations.ts"
+"get-campaign-donations": "node --disable-warning=ExperimentalWarning scripts/get-campaign-donations.ts"
 ```
 No `build`/`start` scripts (no dist step anymore, matching manga-sync-v2).
 
@@ -204,7 +191,7 @@ Model on manga-sync-v2's, adjusted for `include`:
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM"],
+    "lib": ["ES2022"],
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "strict": true,
@@ -222,7 +209,7 @@ Model on manga-sync-v2's, adjusted for `include`:
   "exclude": ["node_modules"]
 }
 ```
-(`DOM` lib kept because the scrape scripts use Playwright's page-evaluated DOM types; drop it if typecheck doesn't need it.) `noUncheckedIndexedAccess` from manga-sync-v2 is intentionally **not** adopted here — out of scope for a structural move, would require auditing array-index usage across the pipeline for a separate pass.
+`noUncheckedIndexedAccess` from manga-sync-v2 is intentionally **not** adopted here — out of scope for a structural move, would require auditing array-index usage across the pipeline for a separate pass.
 
 ## eslint.config.mjs / .prettierrc (root)
 
@@ -238,34 +225,33 @@ This is autofixable — running `npm run lint:fix` after the file move will conv
 
 - **CommonJS → ESM idioms**: replace `__dirname` with `import.meta.dirname` (Node 24 has this natively) where still needed; replace `if (require.main === module)` (in `build-stats.ts`, `snapshot-by-date.ts`) with `if (import.meta.url === \`file://${process.argv[1]}\`)`; drop the `(async () => { ... })()` IIFE wrappers in entry scripts in favor of top-level `await` (matches `manga-sync-v2`'s style).
 - **Import extensions**: all relative imports need an explicit `.ts` extension (`nodenext` requirement), e.g. `from './lib/setup.ts'`.
-- **Path resolution for local data**: `OUTPUT_DIR` in `scripts/lib/constants.ts` and `scripts/lib/scrape-constants.ts` currently computed as `path.join(__dirname, '..', 'output')` relative to each sub-project. Repoint both to a single shared root `data/output/` dir — since npm scripts always run with `cwd` = the directory containing `package.json`, use `path.join(process.cwd(), 'data', 'output')` rather than an `__dirname`-relative walk.
-- **Dedup `formatTimestamp`**: both `utils.ts` files are byte-identical — collapse into `scripts/lib/format-timestamp.ts`, update the handful of importers.
+- **Path resolution for local data**: `OUTPUT_DIR` in `scripts/lib/constants.ts` currently computed as `path.join(__dirname, '..', 'output')` relative to the sub-project. Repoint to the shared root `data/output/` dir — since npm scripts always run with `cwd` = the directory containing `package.json`, use `path.join(process.cwd(), 'data', 'output')` rather than an `__dirname`-relative walk.
+- **Rename `utils.ts`**: becomes `scripts/lib/format-timestamp.ts` (named for what it actually exports), update the handful of importers.
 - **`.env` loading**: `dotenv/config` loads from `cwd` by default, which will now correctly be the repo root once invoked via `npm run ...` or the updated `bin/` scripts — no code change needed beyond moving the physical `.env`/`.env.example` files.
 
 ## Shell scripts (→ bin/) & CI
 
-All four scripts move into `bin/` and need their `$DIR` resolution updated to walk up one extra level to reach the repo root (since they no longer live at root themselves):
+All three scripts move into `bin/` and need their `$DIR` resolution updated to walk up one extra level to reach the repo root (since they no longer live at root themselves):
 ```bash
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 ```
 - `bin/run-fetch-donations.sh` (was `scripts/tiltify-api/run.sh`): drop the hardcoded `/Users/travis/.asdf/shims/ts-node` call, replace with `cd "$ROOT_DIR" && npm run fetch-donations`; lock file becomes `$ROOT_DIR/.run-fetch-donations.lock`; logs/errors write to `$ROOT_DIR/logs/`/`errors/`.
-- `bin/run-scrape-live-donations.sh` (was `scripts/tiltify-page-scrap/run.sh`): same treatment, `npm run scrape-live-donations`.
 - `bin/refresh.sh` (was root `refresh.sh`): update to `cd "$ROOT_DIR" && npm run fetch-donations`.
 - `bin/backup-r2.sh` (was root `backup-r2.sh`): `ENV_FILE="$ROOT_DIR/.env"`.
 - `.github/workflows/refresh.yml`: drop `working-directory: scripts/tiltify-api` from both steps (defaults to repo root), update `cache-dependency-path` to `package-lock.json`. (This workflow calls `npm run fetch-donations` directly, not through `bin/`, so it's unaffected by the `bin/` move itself.)
-- **Manual follow-up for the user (cannot be done from inside the repo)**: any real system crontab/launchd entry pointing at the old `refresh.sh`, `backup-r2.sh`, or either `run.sh` path needs to be updated to the new `bin/` paths after this merge lands.
+- **Manual follow-up for the user (cannot be done from inside the repo)**: any real system crontab/launchd entry pointing at the old `refresh.sh`, `backup-r2.sh`, or `scripts/tiltify-api/run.sh` path needs to be updated to the new `bin/` paths after this merge lands. (`tiltify-page-scrap/run.sh` is deleted outright — if a crontab entry for it still exists, remove that cron entry rather than repointing it.)
 
 ## Docs
 
 - `docs/overview.md`: architecture diagram's `fetch-donations.ts` reference stays conceptually the same, just no longer nested under `tiltify-api/`.
 - `docs/getting-started.md`: installation becomes `npm install` at root (no `cd scripts/tiltify-api`), update the full "Project structure" tree to reflect `scripts/`, `scripts/lib/`, `bin/`, `data/`, update `.env.example` copy path to root, update the available-scripts table to match the merged `package.json`.
 - Move `scripts/tiltify-api/docs/{api-overview.md,cdawgva-campaigns.md}` → root `docs/`.
-- Fold useful content from `scripts/tiltify-api/README.md` and `scripts/tiltify-page-scrap/README.md` (R2 output shape table, exploration-scripts list, scrape usage/scheduling notes) into the root `README.md` / `docs/`, then delete both sub-READMEs.
+- Fold useful content from `scripts/tiltify-api/README.md` (R2 output shape table, exploration-scripts list) into the root `README.md` / `docs/`, then delete it.
 
 ## Cleanup
 
-Delete entirely: `scripts/tiltify-api/` and `scripts/tiltify-page-scrap/` directory trees (node_modules, dist if present, per-project output/logs/errors, package-lock.json, .tool-versions, .prettierrc, eslint.config.mjs, README.md) — after their content has been migrated per the mapping above. Delete root `refresh.sh`/`backup-r2.sh` after copying into `bin/`. Root `.gitignore` gains `node_modules/` and `data/` (wholesale ignore, like manga-sync-v2 — no `.gitkeep` needed, dirs are created at runtime via `fs.mkdirSync`).
+Delete entirely: `scripts/tiltify-api/` directory tree (node_modules, dist if present, output/logs/errors, package-lock.json, .tool-versions, .prettierrc, eslint.config.mjs, README.md) — after its content has been migrated per the mapping above. Delete `scripts/tiltify-page-scrap/` wholesale, nothing migrated. Delete root `refresh.sh`/`backup-r2.sh` after copying into `bin/`. Root `.gitignore` gains `node_modules/` and `data/` (wholesale ignore, like manga-sync-v2 — no `.gitkeep` needed, dirs are created at runtime via `fs.mkdirSync`).
 
 ## Verification
 
@@ -273,9 +259,8 @@ Delete entirely: `scripts/tiltify-api/` and `scripts/tiltify-page-scrap/` direct
 2. `npm run check` (format + lint:fix + typecheck) passes clean.
 3. `npm run fetch-donations` runs against real `.env` credentials and completes a full pipeline cycle (fetch → merge → upload to R2 → stats → snapshots) without errors — confirms ESM conversion, `import.meta.dirname`/`process.cwd()` paths, and R2 upload all still work.
 4. `npm run get-user-by-slug` (cheapest exploration script) runs cleanly as a smoke test for the other exploration scripts' shared pattern.
-5. `npm run scrape-live-donations` (requires `npx playwright install chromium` first) runs and produces a timestamped file under `data/output/`.
-6. `bin/run-fetch-donations.sh` and `bin/refresh.sh` run successfully from a fresh shell (not just via `npm run`), confirming the `ROOT_DIR` path-walking fix works.
-7. Confirm `git status` shows the two old sub-project directories removed and no leftover `node_modules` tracked.
+5. `bin/run-fetch-donations.sh` and `bin/refresh.sh` run successfully from a fresh shell (not just via `npm run`), confirming the `ROOT_DIR` path-walking fix works.
+6. Confirm `git status` shows both old sub-project directories removed and no leftover `node_modules` tracked.
 
 ## Commit policy (per AGENTS.md)
 
