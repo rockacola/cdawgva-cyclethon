@@ -1,10 +1,8 @@
 import { CYCLETHON_5_CAMPAIGN_ID } from './lib/campaign.ts';
 import { downloadJSON, uploadJSON } from './lib/data-store.ts';
+import { R2_KEY_FULL, R2_KEY_STATS } from './lib/r2-keys.ts';
 import { setup } from './lib/setup.ts';
 import type { SavedDonation } from './lib/types.ts';
-
-const R2_KEY_FULL = 'donations-full.json';
-const R2_KEY_STATS = 'donations-stats.json';
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000; // UTC+9, no DST
 

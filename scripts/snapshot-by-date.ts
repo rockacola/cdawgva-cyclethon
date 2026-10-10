@@ -15,11 +15,10 @@ import 'dotenv/config';
 
 import { EVENT_END, EVENT_START } from './lib/campaign.ts';
 import { downloadJSON, uploadJSON } from './lib/data-store.ts';
+import { R2_KEY_FULL, r2KeyForDate } from './lib/r2-keys.ts';
 import type { SavedDonation } from './lib/types.ts';
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000; // UTC+9
-
-const R2_KEY_FULL = 'donations-full.json';
 
 interface FullData {
   updated_at: string;
@@ -29,10 +28,6 @@ interface FullData {
 interface DailySnapshot {
   generated_at: string;
   donations: SavedDonation[];
-}
-
-function r2KeyForDate(date: string): string {
-  return `donations-${date}.json`;
 }
 
 function getJstDayRange(dateStr: string): { startUnix: number; endUnix: number } {

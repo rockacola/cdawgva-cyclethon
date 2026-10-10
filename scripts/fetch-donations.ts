@@ -7,6 +7,7 @@ import type { createApiClient } from './lib/client.ts';
 import { OUTPUT_DIR } from './lib/constants.ts';
 import { downloadJSON, uploadJSON } from './lib/data-store.ts';
 import { formatTimestamp } from './lib/format-timestamp.ts';
+import { R2_KEY_FULL, R2_KEY_LATEST_100, R2_KEY_LATEST_500 } from './lib/r2-keys.ts';
 import { setup } from './lib/setup.ts';
 import type { components } from './lib/types/api.ts';
 import type { DonationsSnapshot, SavedDonation } from './lib/types.ts';
@@ -17,10 +18,6 @@ type TiltifyClient = ReturnType<typeof createApiClient>;
 
 const LIMIT = 100;
 const OVERLAP_BUFFER_MS = 30_000; // 30s overlap to avoid missing edge cases on burst
-
-const R2_KEY_FULL = 'donations-full.json';
-const R2_KEY_LATEST_100 = 'donations-latest-100.json';
-const R2_KEY_LATEST_500 = 'donations-latest-500.json';
 
 interface FullData {
   updated_at: string;

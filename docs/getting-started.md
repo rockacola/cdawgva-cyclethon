@@ -104,6 +104,7 @@ scripts/
     data-store.ts                   DATA_STORE switch: picks local-store.ts or r2.ts
     local-store.ts                  Local filesystem backend (data/output/)
     r2.ts                           Cloudflare R2 backend
+    r2-keys.ts                      Dataset filenames shared by fetch-donations/build-stats/snapshot-by-date
     setup.ts                        Bootstrap (env + auth)
     types.ts                        Data models
     constants.ts                    API URLs and data/ directory paths
