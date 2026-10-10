@@ -14,7 +14,7 @@
 import 'dotenv/config';
 
 import { EVENT_END, EVENT_START } from './lib/campaign.ts';
-import { downloadJSON, uploadJSON } from './lib/r2.ts';
+import { downloadJSON, uploadJSON } from './lib/data-store.ts';
 import type { SavedDonation } from './lib/types.ts';
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000; // UTC+9
@@ -93,7 +93,7 @@ export async function buildDailySnapshots(): Promise<void> {
   }
 
   // Download full donations once
-  console.log('Downloading donations-full.json from R2...');
+  console.log('Downloading donations-full.json...');
   const full = await downloadJSON<FullData>(R2_KEY_FULL);
 
   if (!full || full.donations.length === 0) {

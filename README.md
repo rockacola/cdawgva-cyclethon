@@ -82,6 +82,7 @@ Example donation record:
 - **Type-safe API integration**: TypeScript types auto-generated from Tiltify's OpenAPI spec via `openapi-typescript`
 - **OAuth client credentials flow**: obtains short-lived bearer tokens per run; no token refresh logic needed
 - **Local backup on every run**: raw API responses saved to `data/output/` as an audit trail
+- **Safe local testing**: a `DATA_STORE=local|r2` switch routes reads/writes to `data/store/` by default, so running the pipeline locally never touches the production R2 bucket unless explicitly opted in
 
 ## What This Demonstrates
 
@@ -185,14 +186,17 @@ scripts/
   lib/
     auth.ts                         OAuth token acquisition
     client.ts                       Typed HTTP client (openapi-fetch)
-    r2.ts                           Cloudflare R2 upload/download
+    campaign.ts                     Campaign/event identifiers
+    data-store.ts                   DATA_STORE switch: local-store.ts or r2.ts
+    local-store.ts                  Local filesystem backend (data/store/)
+    r2.ts                           Cloudflare R2 backend
     setup.ts                        Bootstrap (env + auth)
     types.ts                        Data models
-    constants.ts                    API URLs and campaign IDs
+    constants.ts                    API URLs and data/ directory paths
     format-timestamp.ts             Shared timestamp formatting util
     types/api.ts                    Auto-generated Tiltify API types
-data/                                Gitignored local data (output/, inbox/)
-.env.example                        Credential template
+data/                                Gitignored local data (output/, store/, inbox/)
+.env.example                        Credential and config template
 ```
 
 ## Future Improvements

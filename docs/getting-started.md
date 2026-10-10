@@ -18,20 +18,32 @@ npm install
 cp .env.example .env
 ```
 
-| Variable                | Description                                     |
-| ----------------------- | ----------------------------------------------- |
-| `TILTIFY_CLIENT_ID`     | Tiltify app client ID (Account Settings > Apps) |
-| `TILTIFY_CLIENT_SECRET` | Tiltify app client secret                       |
-| `R2_ACCOUNT_ID`         | Cloudflare account ID                           |
-| `R2_ACCESS_KEY_ID`      | R2 API token (Object Read & Write)              |
-| `R2_SECRET_ACCESS_KEY`  | R2 API secret                                   |
-| `R2_BUCKET_NAME`        | R2 bucket name                                  |
+| Variable                | Description                                             |
+| ----------------------- | ------------------------------------------------------- |
+| `DATA_STORE`            | `local` (writes to `data/store/`, safe default) or `r2` |
+| `TILTIFY_CLIENT_ID`     | Tiltify app client ID (Account Settings > Apps)         |
+| `TILTIFY_CLIENT_SECRET` | Tiltify app client secret                               |
+| `R2_ACCOUNT_ID`         | Cloudflare account ID                                   |
+| `R2_ACCESS_KEY_ID`      | R2 API token (Object Read & Write)                      |
+| `R2_SECRET_ACCESS_KEY`  | R2 API secret                                           |
+| `R2_BUCKET_NAME`        | R2 bucket name                                          |
 
 ## Running the pipeline
+
+`DATA_STORE` defaults to `local` in `.env.example`, so a bare run never touches production:
 
 ```bash
 npm run fetch-donations
 ```
+
+To test against the real Cloudflare R2 bucket, opt in explicitly:
+
+```bash
+DATA_STORE=r2 npm run fetch-donations
+```
+
+CI (`.github/workflows/refresh.yml`) and the cron scripts in `bin/` always force `DATA_STORE=r2` regardless
+of your local `.env` — their whole purpose is driving the real pipeline.
 
 ## Available scripts
 
@@ -85,14 +97,18 @@ scripts/
   lib/
     auth.ts                         OAuth token acquisition
     client.ts                       Typed HTTP client (openapi-fetch)
-    r2.ts                           Cloudflare R2 upload/download
+    campaign.ts                     Campaign/event identifiers (user ID, campaign ID, event dates)
+    data-store.ts                   DATA_STORE switch: picks local-store.ts or r2.ts
+    local-store.ts                  Local filesystem backend (data/store/)
+    r2.ts                           Cloudflare R2 backend
     setup.ts                        Bootstrap (env + auth)
     types.ts                        Data models
-    constants.ts                    API URLs and campaign IDs
+    constants.ts                    API URLs and data/ directory paths
     format-timestamp.ts             Shared timestamp formatting util
     types/api.ts                    Auto-generated Tiltify API types
 data/
-  output/                           Local raw snapshot backups (gitignored)
+  output/                           Local raw snapshot backups, always written (gitignored)
+  store/                            DATA_STORE=local destination, mirrors the R2 bucket's keys (gitignored)
   inbox/                            Scaffolded for future manual input files (gitignored, unused)
-.env.example                        Credential template
+.env.example                        Credential and config template
 ```

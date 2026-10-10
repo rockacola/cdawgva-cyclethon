@@ -1,5 +1,5 @@
 import { CYCLETHON_5_CAMPAIGN_ID } from './lib/campaign.ts';
-import { downloadJSON, uploadJSON } from './lib/r2.ts';
+import { downloadJSON, uploadJSON } from './lib/data-store.ts';
 import { setup } from './lib/setup.ts';
 import type { SavedDonation } from './lib/types.ts';
 
@@ -76,7 +76,7 @@ export async function buildStats(): Promise<void> {
     goal_currency: campaign.goal?.currency ?? 'USD',
   };
 
-  console.log('Downloading donations-full.json from R2...');
+  console.log('Downloading donations-full.json...');
   const full = await downloadJSON<FullData>(R2_KEY_FULL);
 
   if (!full || full.donations.length === 0) {

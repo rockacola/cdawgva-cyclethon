@@ -5,8 +5,8 @@ import { buildStats } from './build-stats.ts';
 import { CYCLETHON_5_CAMPAIGN_ID } from './lib/campaign.ts';
 import type { createApiClient } from './lib/client.ts';
 import { OUTPUT_DIR } from './lib/constants.ts';
+import { downloadJSON, uploadJSON } from './lib/data-store.ts';
 import { formatTimestamp } from './lib/format-timestamp.ts';
-import { downloadJSON, uploadJSON } from './lib/r2.ts';
 import { setup } from './lib/setup.ts';
 import type { components } from './lib/types/api.ts';
 import type { DonationsSnapshot, SavedDonation } from './lib/types.ts';
@@ -82,7 +82,7 @@ try {
   const client = await setup();
 
   // Step 1: Download existing full data from R2
-  console.log('Downloading existing donations from R2...');
+  console.log('Downloading existing donations...');
   const existing = await downloadJSON<FullData>(R2_KEY_FULL);
   const existingDonations: SavedDonation[] = existing?.donations ?? [];
   console.log(`${existingDonations.length} existing donations loaded.`);

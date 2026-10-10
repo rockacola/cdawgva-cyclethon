@@ -28,7 +28,7 @@ run() {
   echo "[START] $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
   cd "$ROOT_DIR" || exit 1
-  npm run fetch-donations || exit 1
+  DATA_STORE=r2 npm run fetch-donations || exit 1
 
   echo "[END] $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }

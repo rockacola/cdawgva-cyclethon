@@ -22,7 +22,7 @@ trap "rm -f '$LOCK'" EXIT
 touch "$LOCK"
 
 cd "$ROOT_DIR" || exit 1
-npm run fetch-donations > "$LOG" 2> "$ERR"
+DATA_STORE=r2 npm run fetch-donations > "$LOG" 2> "$ERR"
 EXIT_CODE=$?
 
 [ ! -s "$LOG" ] && rm -f "$LOG"
