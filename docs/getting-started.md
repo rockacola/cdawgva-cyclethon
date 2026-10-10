@@ -18,15 +18,15 @@ npm install
 cp .env.example .env
 ```
 
-| Variable                | Description                                             |
-| ----------------------- | ------------------------------------------------------- |
-| `DATA_STORE`            | `local` (writes to `data/store/`, safe default) or `r2` |
-| `TILTIFY_CLIENT_ID`     | Tiltify app client ID (Account Settings > Apps)         |
-| `TILTIFY_CLIENT_SECRET` | Tiltify app client secret                               |
-| `R2_ACCOUNT_ID`         | Cloudflare account ID                                   |
-| `R2_ACCESS_KEY_ID`      | R2 API token (Object Read & Write)                      |
-| `R2_SECRET_ACCESS_KEY`  | R2 API secret                                           |
-| `R2_BUCKET_NAME`        | R2 bucket name                                          |
+| Variable                | Description                                              |
+| ----------------------- | -------------------------------------------------------- |
+| `DATA_STORE`            | `local` (writes to `data/output/`, safe default) or `r2` |
+| `TILTIFY_CLIENT_ID`     | Tiltify app client ID (Account Settings > Apps)          |
+| `TILTIFY_CLIENT_SECRET` | Tiltify app client secret                                |
+| `R2_ACCOUNT_ID`         | Cloudflare account ID                                    |
+| `R2_ACCESS_KEY_ID`      | R2 API token (Object Read & Write)                       |
+| `R2_SECRET_ACCESS_KEY`  | R2 API secret                                            |
+| `R2_BUCKET_NAME`        | R2 bucket name                                           |
 
 ## Running the pipeline
 
@@ -99,7 +99,7 @@ scripts/
     client.ts                       Typed HTTP client (openapi-fetch)
     campaign.ts                     Campaign/event identifiers (user ID, campaign ID, event dates)
     data-store.ts                   DATA_STORE switch: picks local-store.ts or r2.ts
-    local-store.ts                  Local filesystem backend (data/store/)
+    local-store.ts                  Local filesystem backend (data/output/)
     r2.ts                           Cloudflare R2 backend
     setup.ts                        Bootstrap (env + auth)
     types.ts                        Data models
@@ -107,8 +107,7 @@ scripts/
     format-timestamp.ts             Shared timestamp formatting util
     types/api.ts                    Auto-generated Tiltify API types
 data/
-  output/                           Local raw snapshot backups, always written (gitignored)
-  store/                            DATA_STORE=local destination, mirrors the R2 bucket's keys (gitignored)
+  output/                           Local raw snapshot backups, plus the DATA_STORE=local destination (gitignored)
   inbox/                            Scaffolded for future manual input files (gitignored, unused)
 .env.example                        Credential and config template
 ```
