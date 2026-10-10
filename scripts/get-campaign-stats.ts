@@ -65,7 +65,7 @@
 //   team_campaign_id: null
 // }
 
-import { CYCLETHON_5_CAMPAIGN_ID } from './lib/constants.ts';
+import { CYCLETHON_5_CAMPAIGN_ID } from './lib/campaign.ts';
 import { setup } from './lib/setup.ts';
 
 try {

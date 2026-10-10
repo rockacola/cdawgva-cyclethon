@@ -1,4 +1,4 @@
-import { CYCLETHON_5_CAMPAIGN_ID } from './lib/constants.ts';
+import { CYCLETHON_5_CAMPAIGN_ID } from './lib/campaign.ts';
 import { downloadJSON, uploadJSON } from './lib/r2.ts';
 import { setup } from './lib/setup.ts';
 import type { SavedDonation } from './lib/types.ts';

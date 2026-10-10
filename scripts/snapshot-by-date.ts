@@ -13,13 +13,11 @@
 
 import 'dotenv/config';
 
+import { EVENT_END, EVENT_START } from './lib/campaign.ts';
 import { downloadJSON, uploadJSON } from './lib/r2.ts';
 import type { SavedDonation } from './lib/types.ts';
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000; // UTC+9
-
-const EVENT_START = '2026-04-05'; // inclusive, JST
-const EVENT_END = '2026-04-19'; // inclusive, JST
 
 const R2_KEY_FULL = 'donations-full.json';
 

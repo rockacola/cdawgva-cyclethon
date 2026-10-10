@@ -31,15 +31,14 @@
 //   }
 // }
 
+import { CDAWGVA_SLUG } from './lib/campaign.ts';
 import { setup } from './lib/setup.ts';
-
-const SLUG = 'cdawgva';
 
 try {
   const client = await setup();
 
   const { data, error } = await client.GET('/api/public/users/by/slug/{slug}', {
-    params: { path: { slug: SLUG } },
+    params: { path: { slug: CDAWGVA_SLUG } },
   });
 
   if (error) {

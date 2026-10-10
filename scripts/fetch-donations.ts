@@ -2,8 +2,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { buildStats } from './build-stats.ts';
+import { CYCLETHON_5_CAMPAIGN_ID } from './lib/campaign.ts';
 import type { createApiClient } from './lib/client.ts';
-import { CYCLETHON_5_CAMPAIGN_ID, OUTPUT_DIR } from './lib/constants.ts';
+import { OUTPUT_DIR } from './lib/constants.ts';
 import { formatTimestamp } from './lib/format-timestamp.ts';
 import { downloadJSON, uploadJSON } from './lib/r2.ts';
 import { setup } from './lib/setup.ts';

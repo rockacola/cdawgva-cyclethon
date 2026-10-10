@@ -53,7 +53,7 @@
 //   }
 // }
 
-import { CDAWGVA_USER_ID } from './lib/constants.ts';
+import { CDAWGVA_USER_ID } from './lib/campaign.ts';
 import { setup } from './lib/setup.ts';
 
 try {
