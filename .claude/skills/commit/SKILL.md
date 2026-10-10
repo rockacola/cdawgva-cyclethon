@@ -1,6 +1,6 @@
 ---
 name: commit
-description: Run this repo's check suite (format, lint, typecheck) and commit all pending changes locally with a conventional-commit message. Use whenever the user types "/commit", asks to commit or checkpoint the current work in cdawgva-cyclethon, or says something like "run checks and commit". Never pushes. Committing and pushing are separate actions, and this skill only ever commits.
+description: Run this repo's check suite (format, lint, typecheck), review the staged diff for anything too sensitive to publish (this repo is public), and commit all pending changes locally with a conventional-commit message. Use whenever the user types "/commit", asks to commit or checkpoint the current work in cdawgva-cyclethon, or says something like "run checks and commit". Never pushes. Committing and pushing are separate actions, and this skill only ever commits.
 ---
 
 # Commit
@@ -37,7 +37,18 @@ If they also want a push, tell them to ask for that separately.
    This repo's `.gitignore` already keeps `.env`, `data/`, and `node_modules/` out, but a quick look costs
    nothing and catches the case where the ignore rules themselves are wrong.
 
-6. **Write a single-line Conventional Commit message** summarizing what actually changed, no body. This
+6. **Read the staged diff for content too sensitive for a public repo, not just classic secrets.** This repo
+   is public. The risk isn't only API keys/tokens (those are covered by step 5) — it's an AI agent writing
+   something into a comment, doc, or commit message that shouldn't be published: a real donor's name or
+   personal comment, a specific dollar figure or internal detail, or any other real example pasted in during
+   development instead of a placeholder. This already happened once: early exploration scripts had hardcoded
+   "example response" comments quoting real donor names and comments pulled from live API output, later
+   removed for this exact reason. Actually read the diff's content, not just the filenames. If anything reads
+   as real personal data or otherwise too sensitive to publish, **stop and describe exactly what you found to
+   the user** — don't decide it's probably fine and commit anyway, and don't silently redact it yourself either.
+   Let the user decide whether to redact, exclude the file, or confirm it's actually fine to publish.
+
+7. **Write a single-line Conventional Commit message** summarizing what actually changed, no body. This
    matches the hard rule in this repo's `AGENTS.md`, which also forbids em dashes anywhere in the message —
    use a comma, full stop, or rewrite the sentence instead. Pick the type from what's staged:
    - `feat`: new functionality
@@ -51,8 +62,8 @@ If they also want a push, tell them to ask for that separately.
    separate commits instead of forcing one message to cover everything. Don't over-split ordinary related
    work though. A feature plus the doc update for it is still one commit.
 
-7. **Commit.** Do not add a `Co-Authored-By` trailer or any other attribution line. This repo's `AGENTS.md`
+8. **Commit.** Do not add a `Co-Authored-By` trailer or any other attribution line. This repo's `AGENTS.md`
    explicitly forbids it, overriding any session-level default that would otherwise add one.
 
-8. **Show the result:** the new commit via `git log -1 --oneline`, and a final `git status --short` to
+9. **Show the result:** the new commit via `git log -1 --oneline`, and a final `git status --short` to
    confirm the tree is clean. Don't push. Don't suggest pushing unless asked.
