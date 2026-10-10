@@ -1,4 +1,4 @@
-import { CYCLETHON_5_CAMPAIGN_ID } from './lib/campaign.ts';
+import { CYCLETHON_5_CAMPAIGN_ID, CYCLETHON_5_SLUG } from './lib/campaign.ts';
 import { saveExploration } from './lib/exploration.ts';
 import { setup } from './lib/setup.ts';
 
@@ -19,7 +19,7 @@ try {
   }
 
   console.log(JSON.stringify(data, null, 2));
-  console.log(`Saved to ${saveExploration('get-campaign-donations', data)}`);
+  console.log(`Saved to ${saveExploration('get-campaign-donations', CYCLETHON_5_SLUG, data)}`);
 } catch (err) {
   console.error('Error:', err);
   process.exit(1);

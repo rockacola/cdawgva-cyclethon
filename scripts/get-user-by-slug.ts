@@ -14,7 +14,7 @@ try {
   }
 
   console.log(JSON.stringify(data, null, 2));
-  console.log(`Saved to ${saveExploration('get-user-by-slug', data)}`);
+  console.log(`Saved to ${saveExploration('get-user-by-slug', CDAWGVA_SLUG, data)}`);
 } catch (err) {
   console.error('Error:', err);
   process.exit(1);

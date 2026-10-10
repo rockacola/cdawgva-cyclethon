@@ -1,4 +1,4 @@
-import { CDAWGVA_USER_ID } from './lib/campaign.ts';
+import { CDAWGVA_SLUG, CDAWGVA_USER_ID } from './lib/campaign.ts';
 import { saveExploration } from './lib/exploration.ts';
 import { setup } from './lib/setup.ts';
 
@@ -14,7 +14,7 @@ try {
   }
 
   console.log(JSON.stringify(data, null, 2));
-  console.log(`Saved to ${saveExploration('get-user-campaigns', data)}`);
+  console.log(`Saved to ${saveExploration('get-user-campaigns', CDAWGVA_SLUG, data)}`);
 } catch (err) {
   console.error('Error:', err);
   process.exit(1);

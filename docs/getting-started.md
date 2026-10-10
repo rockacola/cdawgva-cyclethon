@@ -65,7 +65,8 @@ of your local `.env` — their whole purpose is driving the real pipeline.
 | `npm run generate:types`         | Regenerate types from Tiltify OpenAPI spec       |
 
 Each exploration script prints its result and also saves the raw API response under
-`data/output/exploration/<script-name>_<timestamp>.json` for later review.
+`data/output/exploration/<script-name>_<slug>_<timestamp>.json` for later review (the slug identifies
+which user/campaign was queried, since more than one will be tracked over time).
 
 ## Code quality
 

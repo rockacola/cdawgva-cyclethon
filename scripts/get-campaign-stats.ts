@@ -1,4 +1,4 @@
-import { CYCLETHON_5_CAMPAIGN_ID } from './lib/campaign.ts';
+import { CYCLETHON_5_CAMPAIGN_ID, CYCLETHON_5_SLUG } from './lib/campaign.ts';
 import { saveExploration } from './lib/exploration.ts';
 import { setup } from './lib/setup.ts';
 
@@ -20,7 +20,7 @@ try {
   }
 
   console.log('campaign:', campaign);
-  console.log(`Saved to ${saveExploration('get-campaign-stats', campaign)}`);
+  console.log(`Saved to ${saveExploration('get-campaign-stats', CYCLETHON_5_SLUG, campaign)}`);
 } catch (err) {
   console.error('Error:', err);
   process.exit(1);
