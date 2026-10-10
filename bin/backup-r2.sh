@@ -39,7 +39,7 @@ for var in R2_ACCOUNT_ID R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_BUCKET_NAME; d
 done
 
 TS=$(date -u +%Y%m%d_%H%M%S)
-BACKUP_DIR="$ROOT_DIR/backups/r2/$TS"
+BACKUP_DIR="$ROOT_DIR/data/backups/r2/$TS"
 mkdir -p "$BACKUP_DIR"
 
 R2_ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"

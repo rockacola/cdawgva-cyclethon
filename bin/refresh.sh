@@ -10,10 +10,10 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 TS=$(date -u +%Y%m%d_%H%M%S)
 
-mkdir -p "$ROOT_DIR/logs" "$ROOT_DIR/errors"
+mkdir -p "$ROOT_DIR/data/logs" "$ROOT_DIR/data/errors"
 
-LOG="$ROOT_DIR/logs/refresh_$TS.log"
-ERR="$ROOT_DIR/errors/refresh_$TS.err"
+LOG="$ROOT_DIR/data/logs/refresh_$TS.log"
+ERR="$ROOT_DIR/data/errors/refresh_$TS.err"
 
 # Prevent overlapping runs
 LOCK="$ROOT_DIR/.refresh.lock"

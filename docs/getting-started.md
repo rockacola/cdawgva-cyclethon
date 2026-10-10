@@ -85,9 +85,8 @@ Scripts run directly as TypeScript via Node's native type stripping (`node --dis
 .github/workflows/refresh.yml       GitHub Actions cron pipeline (every 5 min)
 .tool-versions                      Pinned Node.js version
 bin/
-  refresh.sh                        Local manual pipeline trigger
-  backup-r2.sh                      R2 backup utility (cron)
-  run-fetch-donations.sh            Cron entry point for fetch-donations
+  refresh.sh                        Local manual pipeline trigger (forces DATA_STORE=r2)
+  backup-r2.sh                      R2 backup utility (cron; not currently scheduled anywhere)
 scripts/
   fetch-donations.ts                Core: fetch, merge, dedup, upload
   build-stats.ts                    Daily aggregation and campaign stats
@@ -115,5 +114,7 @@ data/
   output/                           Local raw snapshot backups, plus the DATA_STORE=local destination (gitignored)
     exploration/                    Raw API responses from exploration scripts, one file per run
   inbox/                            Scaffolded for future manual input files (gitignored, unused)
+  logs/, errors/                    bin/refresh.sh output (gitignored)
+  backups/                          bin/backup-r2.sh output (gitignored)
 .env.example                        Credential and config template
 ```

@@ -171,9 +171,8 @@ The exploration scripts were used during initial development to discover campaig
 ```text
 .github/workflows/refresh.yml      GitHub Actions pipeline (5-min cron)
 bin/
-  refresh.sh                        Local manual pipeline trigger
-  backup-r2.sh                      R2 backup utility
-  run-fetch-donations.sh            Cron entry point for fetch-donations
+  refresh.sh                        Local manual pipeline trigger (forces DATA_STORE=r2)
+  backup-r2.sh                      R2 backup utility (cron; not currently scheduled anywhere)
 scripts/
   fetch-donations.ts                Core pipeline: fetch, merge, dedup, upload
   build-stats.ts                    Daily aggregation and campaign stats
@@ -197,7 +196,7 @@ scripts/
     format-timestamp.ts             Shared timestamp formatting util
     exploration.ts                  Saves exploration script responses to data/output/exploration/
     types/api.ts                    Auto-generated Tiltify API types
-data/                                Gitignored local data (output/, inbox/)
+data/                                Gitignored local data (output/, inbox/, logs/, errors/, backups/)
 .env.example                        Credential and config template
 ```
 

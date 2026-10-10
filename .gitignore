@@ -1,8 +1,4 @@
-logs/
-errors/
 .refresh.lock
-.run-fetch-donations.lock
-backups/
 .claude/settings.local.json
 node_modules/
 data/
