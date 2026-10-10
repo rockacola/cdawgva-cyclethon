@@ -9,6 +9,7 @@ The repo currently has two independent sub-projects under `scripts/` (`tiltify-a
 Goal: flatten both into standalone TypeScript scripts under one root-level `scripts/` dir with a single root `package.json`, matching the pattern already proven in `manga-sync-v2` — ESM (`"type": "module"`), `tsconfig` with `module`/`moduleResolution: nodenext`, and scripts executed directly via `node --disable-warning=ExperimentalWarning scripts/foo.ts` (Node 24's native TS type-stripping, no `ts-node`, no `tsc` build/dist step). Additionally, separate concerns that were loosely scattered at repo root: TS scripts live in `scripts/`, bash/system scripts get their own `bin/` dir (not loose at root), and local file I/O moves under a `data/` dir (gitignored wholesale, like `manga-sync-v2`) instead of a bare `output/`.
 
 Decisions already confirmed with the user:
+
 - Go all-in on ESM + native Node TS execution (not a minimal CommonJS-preserving move).
 - Drop `scripts/tiltify-api/src/build-donations.ts` — it's self-labeled `DEPRECATED`, wired into no npm script or CI, and writes to a `../../../webapp/` path that no longer exists in this repo.
 - Drop `scripts/tiltify-page-scrap/` entirely (reversed from an earlier draft that planned to migrate it forward). Git history confirms it was a same-day PoC: commit `310daa8` (2026-04-03) added it, and `5bc24df` added the Tiltify API pipeline later that same day. No commits have touched it since except repo-wide config sweeps — it was never used in production, immediately superseded by the API approach. Not migrated; the whole directory (including its `playwright` dependency) is deleted.
@@ -74,42 +75,42 @@ Decisions already confirmed with the user:
 
 ## Old path → new path mapping (reference for updating anything that still points at the old layout)
 
-| Old path | New path |
-| --- | --- |
-| `scripts/tiltify-api/.env` | `.env` |
-| `scripts/tiltify-api/.env.example` | `.env.example` |
-| `scripts/tiltify-api/package.json` + `scripts/tiltify-page-scrap/package.json` | `package.json` (merged) |
-| `scripts/tiltify-api/tsconfig.json` + `scripts/tiltify-page-scrap/tsconfig.json` | `tsconfig.json` (merged) |
-| `scripts/tiltify-api/eslint.config.mjs` | `eslint.config.mjs` |
-| `scripts/tiltify-api/.prettierrc` | `.prettierrc` |
-| `scripts/tiltify-api/.tool-versions` | deleted, root `.tool-versions` already existed |
-| `scripts/tiltify-api/docs/api-overview.md` | `docs/api-overview.md` |
-| `scripts/tiltify-api/docs/cdawgva-campaigns.md` | `docs/cdawgva-campaigns.md` |
-| `scripts/tiltify-api/README.md` | content folded into root `README.md`/`docs/`, file deleted |
-| `scripts/tiltify-api/run.sh` | `bin/run-fetch-donations.sh` |
-| `refresh.sh` (root) | `bin/refresh.sh` |
-| `backup-r2.sh` (root) | `bin/backup-r2.sh` |
-| `scripts/tiltify-api/src/fetch-donations.ts` | `scripts/fetch-donations.ts` |
-| `scripts/tiltify-api/src/build-stats.ts` | `scripts/build-stats.ts` |
-| `scripts/tiltify-api/src/build-donations.ts` | **deleted** (dead code, see Context) |
-| `scripts/tiltify-api/src/snapshot-by-date.ts` | `scripts/snapshot-by-date.ts` |
-| `scripts/tiltify-api/src/get-user-by-slug.ts` | `scripts/get-user-by-slug.ts` |
-| `scripts/tiltify-api/src/get-user-campaigns.ts` | `scripts/get-user-campaigns.ts` |
-| `scripts/tiltify-api/src/get-campaign.ts` | `scripts/get-campaign.ts` |
-| `scripts/tiltify-api/src/get-campaign-stats.ts` | `scripts/get-campaign-stats.ts` |
-| `scripts/tiltify-api/src/get-campaign-donations.ts` | `scripts/get-campaign-donations.ts` |
-| `scripts/tiltify-api/src/auth.ts` | `scripts/lib/auth.ts` |
-| `scripts/tiltify-api/src/client.ts` | `scripts/lib/client.ts` |
-| `scripts/tiltify-api/src/r2.ts` | `scripts/lib/r2.ts` |
-| `scripts/tiltify-api/src/setup.ts` | `scripts/lib/setup.ts` |
-| `scripts/tiltify-api/src/constants.ts` | `scripts/lib/constants.ts` |
-| `scripts/tiltify-api/src/types.ts` | `scripts/lib/types.ts` |
-| `scripts/tiltify-api/src/types/api.ts` | `scripts/lib/types/api.ts` |
-| `scripts/tiltify-api/src/utils.ts` | `scripts/lib/format-timestamp.ts` |
-| `scripts/tiltify-api/output/` | `data/output/` |
-| (none — new) | `data/inbox/` (scaffolded, unused) |
-| `scripts/tiltify-api/logs/`, `scripts/tiltify-api/errors/` | root `logs/`, `errors/` (already existed, now the only copies) |
-| `scripts/tiltify-page-scrap/` (entire directory) | **deleted** — unused same-day PoC, see Context |
+| Old path                                                                         | New path                                                       |
+| -------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `scripts/tiltify-api/.env`                                                       | `.env`                                                         |
+| `scripts/tiltify-api/.env.example`                                               | `.env.example`                                                 |
+| `scripts/tiltify-api/package.json` + `scripts/tiltify-page-scrap/package.json`   | `package.json` (merged)                                        |
+| `scripts/tiltify-api/tsconfig.json` + `scripts/tiltify-page-scrap/tsconfig.json` | `tsconfig.json` (merged)                                       |
+| `scripts/tiltify-api/eslint.config.mjs`                                          | `eslint.config.mjs`                                            |
+| `scripts/tiltify-api/.prettierrc`                                                | `.prettierrc`                                                  |
+| `scripts/tiltify-api/.tool-versions`                                             | deleted, root `.tool-versions` already existed                 |
+| `scripts/tiltify-api/docs/api-overview.md`                                       | `docs/api-overview.md`                                         |
+| `scripts/tiltify-api/docs/cdawgva-campaigns.md`                                  | `docs/cdawgva-campaigns.md`                                    |
+| `scripts/tiltify-api/README.md`                                                  | content folded into root `README.md`/`docs/`, file deleted     |
+| `scripts/tiltify-api/run.sh`                                                     | `bin/run-fetch-donations.sh`                                   |
+| `refresh.sh` (root)                                                              | `bin/refresh.sh`                                               |
+| `backup-r2.sh` (root)                                                            | `bin/backup-r2.sh`                                             |
+| `scripts/tiltify-api/src/fetch-donations.ts`                                     | `scripts/fetch-donations.ts`                                   |
+| `scripts/tiltify-api/src/build-stats.ts`                                         | `scripts/build-stats.ts`                                       |
+| `scripts/tiltify-api/src/build-donations.ts`                                     | **deleted** (dead code, see Context)                           |
+| `scripts/tiltify-api/src/snapshot-by-date.ts`                                    | `scripts/snapshot-by-date.ts`                                  |
+| `scripts/tiltify-api/src/get-user-by-slug.ts`                                    | `scripts/get-user-by-slug.ts`                                  |
+| `scripts/tiltify-api/src/get-user-campaigns.ts`                                  | `scripts/get-user-campaigns.ts`                                |
+| `scripts/tiltify-api/src/get-campaign.ts`                                        | `scripts/get-campaign.ts`                                      |
+| `scripts/tiltify-api/src/get-campaign-stats.ts`                                  | `scripts/get-campaign-stats.ts`                                |
+| `scripts/tiltify-api/src/get-campaign-donations.ts`                              | `scripts/get-campaign-donations.ts`                            |
+| `scripts/tiltify-api/src/auth.ts`                                                | `scripts/lib/auth.ts`                                          |
+| `scripts/tiltify-api/src/client.ts`                                              | `scripts/lib/client.ts`                                        |
+| `scripts/tiltify-api/src/r2.ts`                                                  | `scripts/lib/r2.ts`                                            |
+| `scripts/tiltify-api/src/setup.ts`                                               | `scripts/lib/setup.ts`                                         |
+| `scripts/tiltify-api/src/constants.ts`                                           | `scripts/lib/constants.ts`                                     |
+| `scripts/tiltify-api/src/types.ts`                                               | `scripts/lib/types.ts`                                         |
+| `scripts/tiltify-api/src/types/api.ts`                                           | `scripts/lib/types/api.ts`                                     |
+| `scripts/tiltify-api/src/utils.ts`                                               | `scripts/lib/format-timestamp.ts`                              |
+| `scripts/tiltify-api/output/`                                                    | `data/output/`                                                 |
+| (none — new)                                                                     | `data/inbox/` (scaffolded, unused)                             |
+| `scripts/tiltify-api/logs/`, `scripts/tiltify-api/errors/`                       | root `logs/`, `errors/` (already existed, now the only copies) |
+| `scripts/tiltify-page-scrap/` (entire directory)                                 | **deleted** — unused same-day PoC, see Context                 |
 
 ## Target structure
 
@@ -161,11 +162,13 @@ logs/, errors/                      already exist at root, now the only copies, 
 ## package.json (root)
 
 Dependencies carried forward from `tiltify-api` only (`tiltify-page-scrap` and its `playwright` dependency are dropped):
+
 - `dependencies`: `@aws-sdk/client-s3`, `dotenv`, `openapi-fetch`
 - `devDependencies`: `@eslint/js`, `@types/node`, `eslint`, `eslint-config-prettier`, `eslint-plugin-import`, `openapi-typescript`, `prettier`, `typescript`, `typescript-eslint`
 - Drop `ts-node` (no longer used) and `globals` (manga-sync-v2's config doesn't need it — `typescript-eslint`'s recommended config already turns off `no-undef`; verify via lint run, fall back to keeping `globals.node` in `languageOptions` if `console`/`process`/`fetch` trigger false positives)
 
 Scripts, following the `node --disable-warning=ExperimentalWarning scripts/<file>.ts` pattern (dropping the old `NODE_NO_WARNINGS=1` blanket env var in favor of the targeted flag):
+
 ```
 "lint": "eslint .",
 "lint:fix": "eslint . --fix",
@@ -182,11 +185,13 @@ Scripts, following the `node --disable-warning=ExperimentalWarning scripts/<file
 "get-campaign-stats": "node --disable-warning=ExperimentalWarning scripts/get-campaign-stats.ts",
 "get-campaign-donations": "node --disable-warning=ExperimentalWarning scripts/get-campaign-donations.ts"
 ```
+
 No `build`/`start` scripts (no dist step anymore, matching manga-sync-v2).
 
 ## tsconfig.json (root)
 
 Model on manga-sync-v2's, adjusted for `include`:
+
 ```json
 {
   "compilerOptions": {
@@ -209,21 +214,24 @@ Model on manga-sync-v2's, adjusted for `include`:
   "exclude": ["node_modules"]
 }
 ```
+
 `noUncheckedIndexedAccess` from manga-sync-v2 is intentionally **not** adopted here — out of scope for a structural move, would require auditing array-index usage across the pipeline for a separate pass.
 
 ## eslint.config.mjs / .prettierrc (root)
 
 Single merged copy of the current (identical) configs, plus one addition to match what `CLAUDE.md` already claims is enforced:
+
 ```js
 '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'separate-type-imports' }],
 ```
+
 This is autofixable — running `npm run lint:fix` after the file move will convert type-only imports (e.g. `import { SavedDonation } from './lib/types.ts'` used only as a type) automatically; no need to hand-convert each one.
 
 `.prettierrc` is byte-identical between the two sub-projects today — keep as-is at root.
 
 ## Code changes needed during the move (pattern-level, not file-by-file)
 
-- **CommonJS → ESM idioms**: replace `__dirname` with `import.meta.dirname` (Node 24 has this natively) where still needed; replace `if (require.main === module)` (in `build-stats.ts`, `snapshot-by-date.ts`) with `if (import.meta.url === \`file://${process.argv[1]}\`)`; drop the `(async () => { ... })()` IIFE wrappers in entry scripts in favor of top-level `await` (matches `manga-sync-v2`'s style).
+- **CommonJS → ESM idioms**: replace `__dirname` with `import.meta.dirname` (Node 24 has this natively) where still needed; replace `if (require.main === module)` (in `build-stats.ts`, `snapshot-by-date.ts`) with `if (import.meta.url === \`file://${process.argv[1]}\`)`; drop the `(async () => { ... })()`IIFE wrappers in entry scripts in favor of top-level`await`(matches`manga-sync-v2`'s style).
 - **Import extensions**: all relative imports need an explicit `.ts` extension (`nodenext` requirement), e.g. `from './lib/setup.ts'`.
 - **Path resolution for local data**: `OUTPUT_DIR` in `scripts/lib/constants.ts` currently computed as `path.join(__dirname, '..', 'output')` relative to the sub-project. Repoint to the shared root `data/output/` dir — since npm scripts always run with `cwd` = the directory containing `package.json`, use `path.join(process.cwd(), 'data', 'output')` rather than an `__dirname`-relative walk.
 - **Rename `utils.ts`**: becomes `scripts/lib/format-timestamp.ts` (named for what it actually exports), update the handful of importers.
@@ -232,10 +240,12 @@ This is autofixable — running `npm run lint:fix` after the file move will conv
 ## Shell scripts (→ bin/) & CI
 
 All three scripts move into `bin/` and need their `$DIR` resolution updated to walk up one extra level to reach the repo root (since they no longer live at root themselves):
+
 ```bash
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 ```
+
 - `bin/run-fetch-donations.sh` (was `scripts/tiltify-api/run.sh`): drop the hardcoded `/Users/travis/.asdf/shims/ts-node` call, replace with `cd "$ROOT_DIR" && npm run fetch-donations`; lock file becomes `$ROOT_DIR/.run-fetch-donations.lock`; logs/errors write to `$ROOT_DIR/logs/`/`errors/`.
 - `bin/refresh.sh` (was root `refresh.sh`): update to `cd "$ROOT_DIR" && npm run fetch-donations`.
 - `bin/backup-r2.sh` (was root `backup-r2.sh`): `ENV_FILE="$ROOT_DIR/.env"`.

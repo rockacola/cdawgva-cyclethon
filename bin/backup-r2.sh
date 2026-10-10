@@ -4,19 +4,20 @@
 # Designed to be run as a cron job for hourly backups.
 #
 # Usage:
-#   ./backup-r2.sh
+#   ./bin/backup-r2.sh
 #
 # Cron example (hourly):
-#   0 * * * * /path/to/cdawgva-cyclethon/backup-r2.sh
+#   0 * * * * /path/to/cdawgva-cyclethon/bin/backup-r2.sh
 #
 # Requires: aws CLI (brew install awscli)
-# Reads R2 credentials from: scripts/tiltify-api/.env
+# Reads R2 credentials from: .env
 
 # Add Homebrew asdf binary and shims to PATH so shims can resolve correctly in cron
 export PATH="/opt/homebrew/bin:$HOME/.asdf/shims:$PATH"
 
-DIR="$(cd "$(dirname "$0")" && pwd)"
-ENV_FILE="$DIR/scripts/tiltify-api/.env"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+ENV_FILE="$ROOT_DIR/.env"
 
 # Load .env
 if [ ! -f "$ENV_FILE" ]; then
@@ -38,7 +39,7 @@ for var in R2_ACCOUNT_ID R2_ACCESS_KEY_ID R2_SECRET_ACCESS_KEY R2_BUCKET_NAME; d
 done
 
 TS=$(date -u +%Y%m%d_%H%M%S)
-BACKUP_DIR="$DIR/backups/r2/$TS"
+BACKUP_DIR="$ROOT_DIR/backups/r2/$TS"
 mkdir -p "$BACKUP_DIR"
 
 R2_ENDPOINT="https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com"

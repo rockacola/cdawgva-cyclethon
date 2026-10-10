@@ -6,16 +6,17 @@
 # Add Homebrew asdf binary and shims to PATH so shims can resolve correctly in cron
 export PATH="/opt/homebrew/bin:$HOME/.asdf/shims:$PATH"
 
-DIR="$(cd "$(dirname "$0")" && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 TS=$(date -u +%Y%m%d_%H%M%S)
 
-mkdir -p "$DIR/logs" "$DIR/errors"
+mkdir -p "$ROOT_DIR/logs" "$ROOT_DIR/errors"
 
-LOG="$DIR/logs/refresh_$TS.log"
-ERR="$DIR/errors/refresh_$TS.err"
+LOG="$ROOT_DIR/logs/refresh_$TS.log"
+ERR="$ROOT_DIR/errors/refresh_$TS.err"
 
 # Prevent overlapping runs
-LOCK="$DIR/.refresh.lock"
+LOCK="$ROOT_DIR/.refresh.lock"
 if [ -f "$LOCK" ]; then
   echo "Already running (lock: $LOCK). Exiting." >> "$ERR"
   exit 1
@@ -26,8 +27,8 @@ touch "$LOCK"
 run() {
   echo "[START] $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 
-  cd "$DIR/scripts/tiltify-api" || exit 1
-  NODE_NO_WARNINGS=1 /Users/travis/.asdf/shims/ts-node src/fetch-donations.ts || exit 1
+  cd "$ROOT_DIR" || exit 1
+  npm run fetch-donations || exit 1
 
   echo "[END] $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 }

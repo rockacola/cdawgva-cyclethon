@@ -31,24 +31,22 @@
 //   }
 // }
 
-import { CYCLETHON_5_CAMPAIGN_ID } from './constants';
-import { setup } from './setup';
+import { CYCLETHON_5_CAMPAIGN_ID } from './lib/constants.ts';
+import { setup } from './lib/setup.ts';
 
-(async () => {
-  try {
-    const client = await setup();
+try {
+  const client = await setup();
 
-    const { data, error } = await client.GET('/api/public/campaigns/{campaign_id}', {
-      params: { path: { campaign_id: CYCLETHON_5_CAMPAIGN_ID } },
-    });
+  const { data, error } = await client.GET('/api/public/campaigns/{campaign_id}', {
+    params: { path: { campaign_id: CYCLETHON_5_CAMPAIGN_ID } },
+  });
 
-    if (error) {
-      throw new Error(`API error: ${JSON.stringify(error)}`);
-    }
-
-    console.log(JSON.stringify(data, null, 2));
-  } catch (err) {
-    console.error('Error:', err);
-    process.exit(1);
+  if (error) {
+    throw new Error(`API error: ${JSON.stringify(error)}`);
   }
-})();
+
+  console.log(JSON.stringify(data, null, 2));
+} catch (err) {
+  console.error('Error:', err);
+  process.exit(1);
+}

@@ -64,37 +64,29 @@
 //   has_schedule: false,
 //   team_campaign_id: null
 // }
-import { CYCLETHON_5_CAMPAIGN_ID } from './constants';
-import { setup } from './setup';
 
-(async () => {
-  try {
-    const client = await setup();
+import { CYCLETHON_5_CAMPAIGN_ID } from './lib/constants.ts';
+import { setup } from './lib/setup.ts';
 
-    const { data, error } = await client.GET('/api/public/campaigns/{campaign_id}', {
-      params: { path: { campaign_id: CYCLETHON_5_CAMPAIGN_ID } },
-    });
+try {
+  const client = await setup();
 
-    if (error) {
-      throw new Error(`API error: ${JSON.stringify(error)}`);
-    }
+  const { data, error } = await client.GET('/api/public/campaigns/{campaign_id}', {
+    params: { path: { campaign_id: CYCLETHON_5_CAMPAIGN_ID } },
+  });
 
-    const campaign = data?.data;
-
-    if (!campaign) {
-      throw new Error('No campaign data returned');
-    }
-
-    console.log('campaign:', campaign);
-
-    // const amountRaised = campaign.amount_raised;
-    // const goal = campaign.goal;
-
-    // console.log('Campaign:', campaign.name);
-    // console.log('Amount Raised:', `${amountRaised?.currency} ${amountRaised?.value}`);
-    // console.log('Current Goal:', `${goal?.currency} ${goal?.value}`);
-  } catch (err) {
-    console.error('Error:', err);
-    process.exit(1);
+  if (error) {
+    throw new Error(`API error: ${JSON.stringify(error)}`);
   }
-})();
+
+  const campaign = data?.data;
+
+  if (!campaign) {
+    throw new Error('No campaign data returned');
+  }
+
+  console.log('campaign:', campaign);
+} catch (err) {
+  console.error('Error:', err);
+  process.exit(1);
+}

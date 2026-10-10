@@ -1,7 +1,7 @@
 import createClient from 'openapi-fetch';
 
-import { TILTIFY_API_BASE_URL } from './constants';
-import type { paths } from './types/api';
+import { TILTIFY_API_BASE_URL } from './constants.ts';
+import type { paths } from './types/api.ts';
 
 // Creates a typed API client pre-configured with a Bearer token.
 // All request/response shapes are inferred from the generated OpenAPI types.

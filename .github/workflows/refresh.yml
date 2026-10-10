@@ -21,15 +21,12 @@ jobs:
         with:
           node-version: '24'
           cache: 'npm'
-          cache-dependency-path: scripts/tiltify-api/package-lock.json
 
       - name: Install dependencies
         run: npm ci
-        working-directory: scripts/tiltify-api
 
       - name: Fetch and upload donations to R2
         run: npm run fetch-donations
-        working-directory: scripts/tiltify-api
         env:
           TILTIFY_CLIENT_ID: ${{ secrets.TILTIFY_CLIENT_ID }}
           TILTIFY_CLIENT_SECRET: ${{ secrets.TILTIFY_CLIENT_SECRET }}

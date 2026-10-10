@@ -8,13 +8,13 @@
  * The output format matches donations-latest-100.json: { generated_at, donations }.
  *
  * Called from fetch-donations.ts as part of the refresh pipeline.
- * Can also be run standalone: ts-node src/snapshot-by-date.ts
+ * Can also be run standalone: npm run build-stats -- (see package.json for the direct node invocation)
  */
 
 import 'dotenv/config';
 
-import { downloadJSON, uploadJSON } from './r2';
-import { SavedDonation } from './types';
+import { downloadJSON, uploadJSON } from './lib/r2.ts';
+import type { SavedDonation } from './lib/types.ts';
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000; // UTC+9
 
@@ -124,12 +124,13 @@ export async function buildDailySnapshots(): Promise<void> {
 }
 
 // Standalone runner
-if (require.main === module) {
+if (import.meta.filename === process.argv[1]) {
   console.log(`[START] ${new Date().toISOString()}`);
-  buildDailySnapshots()
-    .then(() => console.log(`[END]   ${new Date().toISOString()}`))
-    .catch((err) => {
-      console.error('Error:', err);
-      process.exit(1);
-    });
+  try {
+    await buildDailySnapshots();
+    console.log(`[END]   ${new Date().toISOString()}`);
+  } catch (err) {
+    console.error('Error:', err);
+    process.exit(1);
+  }
 }

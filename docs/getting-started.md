@@ -9,47 +9,48 @@
 ## Installation
 
 ```bash
-cd scripts/tiltify-api
 npm install
 ```
 
 ## Environment variables
 
 ```bash
-cp scripts/tiltify-api/.env.example scripts/tiltify-api/.env
+cp .env.example .env
 ```
 
-| Variable              | Description                                      |
-| --------------------- | ------------------------------------------------ |
-| `TILTIFY_CLIENT_ID`   | Tiltify app client ID (Account Settings > Apps)  |
-| `TILTIFY_CLIENT_SECRET` | Tiltify app client secret                      |
-| `R2_ACCOUNT_ID`       | Cloudflare account ID                            |
-| `R2_ACCESS_KEY_ID`    | R2 API token (Object Read & Write)               |
-| `R2_SECRET_ACCESS_KEY`| R2 API secret                                   |
-| `R2_BUCKET_NAME`      | R2 bucket name                                   |
+| Variable                | Description                                     |
+| ----------------------- | ----------------------------------------------- |
+| `TILTIFY_CLIENT_ID`     | Tiltify app client ID (Account Settings > Apps) |
+| `TILTIFY_CLIENT_SECRET` | Tiltify app client secret                       |
+| `R2_ACCOUNT_ID`         | Cloudflare account ID                           |
+| `R2_ACCESS_KEY_ID`      | R2 API token (Object Read & Write)              |
+| `R2_SECRET_ACCESS_KEY`  | R2 API secret                                   |
+| `R2_BUCKET_NAME`        | R2 bucket name                                  |
 
 ## Running the pipeline
 
 ```bash
-cd scripts/tiltify-api
 npm run fetch-donations
 ```
 
-## Available scripts (`scripts/tiltify-api`)
+## Available scripts
 
-| Script                  | Description                                          |
-| ----------------------- | ---------------------------------------------------- |
-| `npm run fetch-donations` | Core pipeline: fetch, merge, dedup, upload to R2  |
-| `npm run build-stats`   | Rebuild the stats JSON independently                 |
-| `npm run build-donations` | Rebuild the full donations JSON                    |
-| `npm run lint`          | Report ESLint issues                                 |
-| `npm run lint:fix`      | Auto-fix ESLint issues                               |
-| `npm run format`        | Auto-format with Prettier                            |
-| `npm run format:check`  | Check formatting without writing                     |
-| `npm run typecheck`     | TypeScript type check without compiling              |
-| `npm run check`         | Runs format + lint:fix + typecheck (pre-commit)      |
-| `npm run generate:types`| Regenerate types from Tiltify OpenAPI spec           |
-| `npm run build`         | Compile TypeScript to `dist/`                        |
+| Script                           | Description                                      |
+| -------------------------------- | ------------------------------------------------ |
+| `npm run fetch-donations`        | Core pipeline: fetch, merge, dedup, upload to R2 |
+| `npm run build-stats`            | Rebuild the stats JSON independently             |
+| `npm run get-user-by-slug`       | Exploration: look up a Tiltify user by slug      |
+| `npm run get-user-campaigns`     | Exploration: list a user's campaigns             |
+| `npm run get-campaign`           | Exploration: fetch a campaign by ID              |
+| `npm run get-campaign-stats`     | Exploration: fetch a campaign's live stats       |
+| `npm run get-campaign-donations` | Exploration: list a campaign's donations         |
+| `npm run lint`                   | Report ESLint issues                             |
+| `npm run lint:fix`               | Auto-fix ESLint issues                           |
+| `npm run format`                 | Auto-format with Prettier                        |
+| `npm run format:check`           | Check formatting without writing                 |
+| `npm run typecheck`              | TypeScript type check                            |
+| `npm run check`                  | Runs format + lint:fix + typecheck (pre-commit)  |
+| `npm run generate:types`         | Regenerate types from Tiltify OpenAPI spec       |
 
 ## Code quality
 
@@ -61,27 +62,37 @@ Three tools enforce code quality:
 
 Run all three at once: `npm run check`
 
+Scripts run directly as TypeScript via Node's native type stripping (`node --disable-warning=ExperimentalWarning scripts/foo.ts`) — no build step, no `ts-node`.
+
 ## Project structure
 
 ```
 .github/workflows/refresh.yml       GitHub Actions cron pipeline (every 5 min)
 .tool-versions                      Pinned Node.js version
+bin/
+  refresh.sh                        Local manual pipeline trigger
+  backup-r2.sh                      R2 backup utility (cron)
+  run-fetch-donations.sh            Cron entry point for fetch-donations
 scripts/
-  tiltify-api/                      Primary pipeline service
-    src/
-      fetch-donations.ts            Core: fetch, merge, dedup, upload
-      build-stats.ts                Daily aggregation and campaign stats
-      build-donations.ts            Rebuild full donations dataset
-      snapshot-by-date.ts           Per-day snapshots (JST timezone)
-      auth.ts                       OAuth token acquisition
-      client.ts                     Typed HTTP client (openapi-fetch)
-      r2.ts                         Cloudflare R2 upload/download
-      setup.ts                      Bootstrap (env + auth)
-      types.ts                      Data models
-      constants.ts                  API URLs and campaign IDs
-      types/api.ts                  Auto-generated Tiltify API types
-    .env.example                    Credential template
-  tiltify-page-scrap/               Early Playwright scraper (superseded by API)
-backup-r2.sh                        R2 backup utility
-refresh.sh                          Local manual pipeline trigger
+  fetch-donations.ts                Core: fetch, merge, dedup, upload
+  build-stats.ts                    Daily aggregation and campaign stats
+  snapshot-by-date.ts               Per-day snapshots (JST timezone)
+  get-user-by-slug.ts               Exploration script
+  get-user-campaigns.ts             Exploration script
+  get-campaign.ts                   Exploration script
+  get-campaign-stats.ts             Exploration script
+  get-campaign-donations.ts         Exploration script
+  lib/
+    auth.ts                         OAuth token acquisition
+    client.ts                       Typed HTTP client (openapi-fetch)
+    r2.ts                           Cloudflare R2 upload/download
+    setup.ts                        Bootstrap (env + auth)
+    types.ts                        Data models
+    constants.ts                    API URLs and campaign IDs
+    format-timestamp.ts             Shared timestamp formatting util
+    types/api.ts                    Auto-generated Tiltify API types
+data/
+  output/                           Local raw snapshot backups (gitignored)
+  inbox/                            Scaffolded for future manual input files (gitignored, unused)
+.env.example                        Credential template
 ```

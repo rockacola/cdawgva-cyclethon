@@ -29,13 +29,13 @@ The companion web app lives at [cdawgva-cyclethon-app](https://github.com/rockac
 
 ## Output files
 
-| File                        | Description                                            |
-| --------------------------- | ------------------------------------------------------ |
-| `donations-full.json`       | Complete donation history (source of truth)            |
-| `donations-latest-100.json` | Most recent 100 donations (fast webapp loads)          |
-| `donations-latest-500.json` | Most recent 500 donations                              |
-| `donations-stats.json`      | Daily totals, cumulative totals, campaign progress     |
-| `donations-YYYY-MM-DD.json` | Per-day snapshots for each completed event day (JST)   |
+| File                        | Description                                          |
+| --------------------------- | ---------------------------------------------------- |
+| `donations-full.json`       | Complete donation history (source of truth)          |
+| `donations-latest-100.json` | Most recent 100 donations (fast webapp loads)        |
+| `donations-latest-500.json` | Most recent 500 donations                            |
+| `donations-stats.json`      | Daily totals, cumulative totals, campaign progress   |
+| `donations-YYYY-MM-DD.json` | Per-day snapshots for each completed event day (JST) |
 
 ## Pipeline steps
 
@@ -50,14 +50,14 @@ The companion web app lives at [cdawgva-cyclethon-app](https://github.com/rockac
 
 ## Tech stack
 
-| Layer         | Technology                                    |
-| ------------- | --------------------------------------------- |
-| Language      | TypeScript 5 (strict mode)                    |
-| Runtime       | Node.js 24                                    |
-| API client    | `openapi-fetch` with auto-generated types     |
-| Cloud storage | Cloudflare R2 via AWS S3 SDK                  |
-| CI/CD         | GitHub Actions (5-minute cron)                |
-| Code quality  | ESLint + Prettier + TypeScript strict         |
+| Layer         | Technology                                |
+| ------------- | ----------------------------------------- |
+| Language      | TypeScript 5 (strict mode)                |
+| Runtime       | Node.js 24                                |
+| API client    | `openapi-fetch` with auto-generated types |
+| Cloud storage | Cloudflare R2 via AWS S3 SDK              |
+| CI/CD         | GitHub Actions (5-minute cron)            |
+| Code quality  | ESLint + Prettier + TypeScript strict     |
 
 ## Key design decisions
 

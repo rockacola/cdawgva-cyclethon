@@ -1,7 +1,7 @@
-import { CYCLETHON_5_CAMPAIGN_ID } from './constants';
-import { downloadJSON, uploadJSON } from './r2';
-import { setup } from './setup';
-import { SavedDonation } from './types';
+import { CYCLETHON_5_CAMPAIGN_ID } from './lib/constants.ts';
+import { downloadJSON, uploadJSON } from './lib/r2.ts';
+import { setup } from './lib/setup.ts';
+import type { SavedDonation } from './lib/types.ts';
 
 const R2_KEY_FULL = 'donations-full.json';
 const R2_KEY_STATS = 'donations-stats.json';
@@ -157,12 +157,13 @@ export async function buildStats(): Promise<void> {
 }
 
 // Standalone runner
-if (require.main === module) {
+if (import.meta.filename === process.argv[1]) {
   console.log(`[START] ${new Date().toISOString()}`);
-  buildStats()
-    .then(() => console.log(`[END]   ${new Date().toISOString()}`))
-    .catch((err) => {
-      console.error('Error:', err);
-      process.exit(1);
-    });
+  try {
+    await buildStats();
+    console.log(`[END]   ${new Date().toISOString()}`);
+  } catch (err) {
+    console.error('Error:', err);
+    process.exit(1);
+  }
 }

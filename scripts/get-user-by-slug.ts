@@ -31,25 +31,23 @@
 //   }
 // }
 
-import { setup } from './setup';
+import { setup } from './lib/setup.ts';
 
 const SLUG = 'cdawgva';
 
-(async () => {
-  try {
-    const client = await setup();
+try {
+  const client = await setup();
 
-    const { data, error } = await client.GET('/api/public/users/by/slug/{slug}', {
-      params: { path: { slug: SLUG } },
-    });
+  const { data, error } = await client.GET('/api/public/users/by/slug/{slug}', {
+    params: { path: { slug: SLUG } },
+  });
 
-    if (error) {
-      throw new Error(`API error: ${JSON.stringify(error)}`);
-    }
-
-    console.log(JSON.stringify(data, null, 2));
-  } catch (err) {
-    console.error('Error:', err);
-    process.exit(1);
+  if (error) {
+    throw new Error(`API error: ${JSON.stringify(error)}`);
   }
-})();
+
+  console.log(JSON.stringify(data, null, 2));
+} catch (err) {
+  console.error('Error:', err);
+  process.exit(1);
+}

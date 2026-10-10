@@ -1,7 +1,7 @@
 import 'dotenv/config';
 
-import { getAccessToken } from './auth';
-import { createApiClient } from './client';
+import { getAccessToken } from './auth.ts';
+import { createApiClient } from './client.ts';
 
 // Shared bootstrap: loads env, obtains access token, returns a typed API client.
 // Call this at the top of every script.

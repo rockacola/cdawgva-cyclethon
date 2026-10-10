@@ -62,7 +62,7 @@ Example donation record:
                                                                    └──────────────┘
 ```
 
-**Pipeline steps** (runs in [`fetch-donations.ts`](scripts/tiltify-api/src/fetch-donations.ts)):
+**Pipeline steps** (runs in [`fetch-donations.ts`](scripts/fetch-donations.ts)):
 
 1. **Download** the existing full dataset from R2
 2. **Determine fetch window** using the latest donation timestamp minus a 30-second overlap buffer to avoid missing edge cases during donation bursts
@@ -81,7 +81,7 @@ Example donation record:
 - **Daily aggregations**: stats file includes per-day totals, cumulative totals, and campaign goal/raised amounts, all in JST timezone
 - **Type-safe API integration**: TypeScript types auto-generated from Tiltify's OpenAPI spec via `openapi-typescript`
 - **OAuth client credentials flow**: obtains short-lived bearer tokens per run; no token refresh logic needed
-- **Local backup on every run**: raw API responses saved to `output/` as an audit trail
+- **Local backup on every run**: raw API responses saved to `data/output/` as an audit trail
 
 ## What This Demonstrates
 
@@ -106,7 +106,6 @@ Example donation record:
 ### Installation
 
 ```bash
-cd scripts/tiltify-api
 npm install
 ```
 
@@ -152,33 +151,48 @@ Uploaded donations-latest-100.json (100 donations).
 ### Other Commands
 
 ```bash
-npm run build-stats       # Rebuild stats file independently
-npm run lint              # Run ESLint
-npm run format            # Auto-format with Prettier
-npm run typecheck         # Type check without compiling
-npm run generate:types    # Regenerate types from Tiltify OpenAPI spec
+npm run build-stats            # Rebuild stats file independently
+npm run get-user-by-slug       # Exploration: look up a Tiltify user by slug
+npm run get-user-campaigns     # Exploration: list a user's campaigns
+npm run get-campaign           # Exploration: fetch a campaign by ID
+npm run get-campaign-stats     # Exploration: fetch a campaign's live stats
+npm run get-campaign-donations # Exploration: list a campaign's donations
+npm run lint                   # Run ESLint
+npm run format                 # Auto-format with Prettier
+npm run typecheck               # Type check without compiling
+npm run generate:types          # Regenerate types from Tiltify OpenAPI spec
 ```
+
+The exploration scripts were used during initial development to discover campaign and user IDs; they're kept around as handy one-offs for inspecting the Tiltify API directly.
 
 ## Project Structure
 
 ```text
 .github/workflows/refresh.yml      GitHub Actions pipeline (5-min cron)
-scripts/tiltify-api/
-  src/
-    fetch-donations.ts              Core pipeline: fetch, merge, dedup, upload
-    build-stats.ts                  Daily aggregation and campaign stats
-    snapshot-by-date.ts             Per-day donation snapshots (JST)
+bin/
+  refresh.sh                        Local manual pipeline trigger
+  backup-r2.sh                      R2 backup utility
+  run-fetch-donations.sh            Cron entry point for fetch-donations
+scripts/
+  fetch-donations.ts                Core pipeline: fetch, merge, dedup, upload
+  build-stats.ts                    Daily aggregation and campaign stats
+  snapshot-by-date.ts               Per-day donation snapshots (JST)
+  get-user-by-slug.ts               Exploration script
+  get-user-campaigns.ts             Exploration script
+  get-campaign.ts                   Exploration script
+  get-campaign-stats.ts             Exploration script
+  get-campaign-donations.ts         Exploration script
+  lib/
     auth.ts                         OAuth token acquisition
     client.ts                       Typed HTTP client (openapi-fetch)
     r2.ts                           Cloudflare R2 upload/download
     setup.ts                        Bootstrap (env + auth)
     types.ts                        Data models
     constants.ts                    API URLs and campaign IDs
+    format-timestamp.ts             Shared timestamp formatting util
     types/api.ts                    Auto-generated Tiltify API types
-  .env.example                      Credential template
-scripts/tiltify-page-scrap/         Early Playwright scraper (superseded by API)
-refresh.sh                          Local manual trigger
-backup-r2.sh                        R2 backup utility
+data/                                Gitignored local data (output/, inbox/)
+.env.example                        Credential template
 ```
 
 ## Future Improvements

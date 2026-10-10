@@ -1,0 +1,42 @@
+{
+  "name": "cdawgva-cyclethon",
+  "version": "1.0.0",
+  "description": "Fetches live donation data from the Tiltify API and publishes it to Cloudflare R2 for the CDawgVA Cyclethon donation dashboard",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
+    "check": "npm run format && npm run lint:fix && npm run typecheck",
+    "generate:types": "openapi-typescript https://v5api.tiltify.com/api/public/openapi -o scripts/lib/types/api.ts",
+    "fetch-donations": "node --disable-warning=ExperimentalWarning scripts/fetch-donations.ts",
+    "build-stats": "node --disable-warning=ExperimentalWarning scripts/build-stats.ts",
+    "get-user-by-slug": "node --disable-warning=ExperimentalWarning scripts/get-user-by-slug.ts",
+    "get-user-campaigns": "node --disable-warning=ExperimentalWarning scripts/get-user-campaigns.ts",
+    "get-campaign": "node --disable-warning=ExperimentalWarning scripts/get-campaign.ts",
+    "get-campaign-stats": "node --disable-warning=ExperimentalWarning scripts/get-campaign-stats.ts",
+    "get-campaign-donations": "node --disable-warning=ExperimentalWarning scripts/get-campaign-donations.ts"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.1148.0",
+    "dotenv": "^16.6.1",
+    "openapi-fetch": "^0.17.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "@types/node": "^20.19.43",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "openapi-typescript": "^7.13.0",
+    "prettier": "^3.9.9",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.71.1"
+  }
+}

@@ -1,19 +1,14 @@
 import js from '@eslint/js';
-import globals from 'globals';
-import importPlugin from 'eslint-plugin-import';
-import tseslint from 'typescript-eslint';
 import prettier from 'eslint-config-prettier';
+import importPlugin from 'eslint-plugin-import';
 import { defineConfig, globalIgnores } from 'eslint/config';
+import tseslint from 'typescript-eslint';
 
 export default defineConfig([
-  globalIgnores(['dist', 'node_modules']),
+  globalIgnores(['node_modules', 'data']),
   {
     files: ['**/*.ts'],
     extends: [js.configs.recommended, tseslint.configs.recommended, prettier],
-    languageOptions: {
-      ecmaVersion: 2020,
-      globals: globals.node,
-    },
     plugins: {
       import: importPlugin,
     },
@@ -28,6 +23,13 @@ export default defineConfig([
         },
       ],
       'sort-imports': ['error', { ignoreDeclarationSort: true }],
+
+      // ── Style ─────────────────────────────────────────────────────────────
+      curly: ['error', 'all'],
+      '@typescript-eslint/consistent-type-imports': [
+        'error',
+        { prefer: 'type-imports', fixStyle: 'separate-type-imports' },
+      ],
 
       // ── Catching bugs / dead code ──────────────────────────────────────────
       'no-unused-vars': 'off',
@@ -62,9 +64,6 @@ export default defineConfig([
         { name: 'isNaN', message: 'Use Number.isNaN() instead.' },
         { name: 'isFinite', message: 'Use Number.isFinite() instead.' },
       ],
-
-      // ── Style ─────────────────────────────────────────────────────────────
-      curly: ['error', 'all'],
 
       // ── Useless code ───────────────────────────────────────────────────────
       'no-useless-concat': 'error',

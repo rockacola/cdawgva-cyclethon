@@ -1,4 +1,4 @@
-import { TILTIFY_TOKEN_URL } from './constants';
+import { TILTIFY_TOKEN_URL } from './constants.ts';
 
 export interface AccessToken {
   access_token: string;
