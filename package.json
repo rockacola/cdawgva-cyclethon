@@ -17,7 +17,6 @@
     "get-user-by-slug": "node --disable-warning=ExperimentalWarning scripts/get-user-by-slug.ts",
     "get-user-campaigns": "node --disable-warning=ExperimentalWarning scripts/get-user-campaigns.ts",
     "get-campaign": "node --disable-warning=ExperimentalWarning scripts/get-campaign.ts",
-    "get-campaign-stats": "node --disable-warning=ExperimentalWarning scripts/get-campaign-stats.ts",
     "get-campaign-donations": "node --disable-warning=ExperimentalWarning scripts/get-campaign-donations.ts"
   },
   "engines": {

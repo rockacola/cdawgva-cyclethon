@@ -54,7 +54,6 @@ of your local `.env` — their whole purpose is driving the real pipeline.
 | `npm run get-user-by-slug -- <slug>`              | Exploration: look up a Tiltify user by slug      |
 | `npm run get-user-campaigns -- <user_id>`         | Exploration: list a user's campaigns             |
 | `npm run get-campaign -- <campaign_id>`           | Exploration: fetch a campaign by ID              |
-| `npm run get-campaign-stats -- <campaign_id>`     | Exploration: fetch a campaign's live stats       |
 | `npm run get-campaign-donations -- <campaign_id>` | Exploration: list a campaign's donations         |
 | `npm run lint`                                    | Report ESLint issues                             |
 | `npm run lint:fix`                                | Auto-fix ESLint issues                           |
@@ -100,7 +99,6 @@ scripts/
   get-user-by-slug.ts               Exploration script
   get-user-campaigns.ts             Exploration script
   get-campaign.ts                   Exploration script
-  get-campaign-stats.ts             Exploration script
   get-campaign-donations.ts         Exploration script
   lib/
     auth.ts                         OAuth token acquisition
