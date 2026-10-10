@@ -26,11 +26,13 @@ cp .env.example .env
 | `R2_ACCOUNT_ID`         | Cloudflare account ID                                    |
 | `R2_ACCESS_KEY_ID`      | R2 API token (Object Read & Write)                       |
 | `R2_SECRET_ACCESS_KEY`  | R2 API secret                                            |
-| `R2_BUCKET_NAME`        | R2 bucket name                                           |
+| `R2_BUCKET_NAME`        | R2 bucket name (`cdawgva`, holds every event)            |
 
 ## Running the pipeline
 
-`DATA_STORE` defaults to `local` in `.env.example`, so a bare run never touches production:
+`DATA_STORE` defaults to `local` in `.env.example`, so a bare run never touches production. `fetch-donations`
+is the live pipeline: it tracks whichever event `CURRENT_LIVE_EVENT_KEY` in `scripts/lib/campaign.ts` points
+at, and no-ops cleanly if that's `null` (no event currently live):
 
 ```bash
 npm run fetch-donations
@@ -45,23 +47,31 @@ DATA_STORE=r2 npm run fetch-donations
 CI (`.github/workflows/refresh.yml`) and the cron scripts in `bin/` always force `DATA_STORE=r2` regardless
 of your local `.env` — their whole purpose is driving the real pipeline.
 
+For a completed event, run the archive pipeline once instead, by its canonical event key (see `EVENTS` in
+`scripts/lib/campaign.ts`):
+
+```bash
+DATA_STORE=r2 npm run archive-event -- cyclethon-4
+```
+
 ## Available scripts
 
-| Script                                            | Description                                      |
-| ------------------------------------------------- | ------------------------------------------------ |
-| `npm run fetch-donations`                         | Core pipeline: fetch, merge, dedup, upload to R2 |
-| `npm run build-stats`                             | Rebuild the stats JSON independently             |
-| `npm run get-user-by-slug -- <slug>`              | Exploration: look up a Tiltify user by slug      |
-| `npm run get-user-campaigns -- <user_id>`         | Exploration: list a user's campaigns             |
-| `npm run get-campaign -- <campaign_id>`           | Exploration: fetch a campaign by ID              |
-| `npm run get-campaign-donations -- <campaign_id>` | Exploration: list a campaign's donations         |
-| `npm run lint`                                    | Report ESLint issues                             |
-| `npm run lint:fix`                                | Auto-fix ESLint issues                           |
-| `npm run format`                                  | Auto-format with Prettier                        |
-| `npm run format:check`                            | Check formatting without writing                 |
-| `npm run typecheck`                               | TypeScript type check                            |
-| `npm run check`                                   | Runs format + lint:fix + typecheck (pre-commit)  |
-| `npm run generate:types`                          | Regenerate types from Tiltify OpenAPI spec       |
+| Script                                            | Description                                               |
+| ------------------------------------------------- | --------------------------------------------------------- |
+| `npm run fetch-donations`                         | Live pipeline: fetch, merge, dedup, upload to R2          |
+| `npm run archive-event -- <event-key>`            | Archive pipeline: one-shot backfill for a completed event |
+| `npm run build-stats`                             | Rebuild the stats JSON for the live event independently   |
+| `npm run get-user-by-slug -- <slug>`              | Exploration: look up a Tiltify user by slug               |
+| `npm run get-user-campaigns -- <user_id>`         | Exploration: list a user's campaigns                      |
+| `npm run get-campaign -- <campaign_id>`           | Exploration: fetch a campaign by ID                       |
+| `npm run get-campaign-donations -- <campaign_id>` | Exploration: list a campaign's donations                  |
+| `npm run lint`                                    | Report ESLint issues                                      |
+| `npm run lint:fix`                                | Auto-fix ESLint issues                                    |
+| `npm run format`                                  | Auto-format with Prettier                                 |
+| `npm run format:check`                            | Check formatting without writing                          |
+| `npm run typecheck`                               | TypeScript type check                                     |
+| `npm run check`                                   | Runs format + lint:fix + typecheck (pre-commit)           |
+| `npm run generate:types`                          | Regenerate types from Tiltify OpenAPI spec                |
 
 Exploration scripts are generic — they take whatever slug/ID you pass and print the raw API response to
 stdout, with progress messages on stderr so stdout stays clean JSON. They don't save anything themselves;
@@ -87,15 +97,15 @@ Scripts run directly as TypeScript via Node's native type stripping (`node --dis
 ## Project structure
 
 ```
-.github/workflows/refresh.yml       GitHub Actions cron pipeline (every 5 min)
+.github/workflows/refresh.yml       GitHub Actions workflow, triggered externally by cron-job.org
 .tool-versions                      Pinned Node.js version
 bin/
   refresh.sh                        Local manual pipeline trigger (forces DATA_STORE=r2)
-  backup-r2.sh                      R2 backup utility (cron; not currently scheduled anywhere)
 scripts/
-  fetch-donations.ts                Core: fetch, merge, dedup, upload
-  build-stats.ts                    Daily aggregation and campaign stats
-  snapshot-by-date.ts               Per-day snapshots (JST timezone)
+  fetch-donations.ts                Live pipeline: fetch, merge, dedup, upload, for CURRENT_LIVE_EVENT_KEY
+  archive-event.ts                  Archive pipeline: one-shot backfill for a completed event
+  build-stats.ts                    Daily aggregation and campaign stats, takes an event key + campaign ID
+  snapshot-by-date.ts               Per-day snapshots (JST timezone), shared by both pipelines
   get-user-by-slug.ts               Exploration script
   get-user-campaigns.ts             Exploration script
   get-campaign.ts                   Exploration script
@@ -103,11 +113,11 @@ scripts/
   lib/
     auth.ts                         OAuth token acquisition
     client.ts                       Typed HTTP client (openapi-fetch)
-    campaign.ts                     Campaign/event identifiers (user ID, campaign ID, event dates)
+    campaign.ts                     Event registry (EVENTS) and CURRENT_LIVE_EVENT_KEY
     data-store.ts                   DATA_STORE switch: picks local-store.ts or r2.ts
     local-store.ts                  Local filesystem backend (data/output/)
     r2.ts                           Cloudflare R2 backend
-    r2-keys.ts                      Dataset filenames shared by fetch-donations/build-stats/snapshot-by-date
+    r2-keys.ts                      Per-event-prefixed dataset key builders
     setup.ts                        Bootstrap (env + auth)
     types.ts                        Data models
     constants.ts                    API URLs and data/ directory paths
@@ -117,6 +127,5 @@ data/
   output/                           Local raw snapshot backups, plus the DATA_STORE=local destination (gitignored)
   inbox/                            Scaffolded for future manual input files (gitignored, unused)
   logs/, errors/                    bin/refresh.sh output (gitignored)
-  backups/                          bin/backup-r2.sh output (gitignored)
 .env.example                        Credential and config template
 ```

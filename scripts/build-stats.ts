@@ -1,6 +1,6 @@
-import { CYCLETHON_5_CAMPAIGN_ID } from './lib/campaign.ts';
+import { CURRENT_LIVE_EVENT_KEY, getEvent } from './lib/campaign.ts';
 import { downloadJSON, uploadJSON } from './lib/data-store.ts';
-import { R2_KEY_FULL, R2_KEY_STATS } from './lib/r2-keys.ts';
+import { r2KeyFull, r2KeyStats } from './lib/r2-keys.ts';
 import { setup } from './lib/setup.ts';
 import type { SavedDonation } from './lib/types.ts';
 
@@ -47,13 +47,13 @@ function toJstDateString(unixSeconds: number): string {
   return new Date(jstMs).toISOString().slice(0, 10);
 }
 
-export async function buildStats(): Promise<void> {
+export async function buildStats(eventKey: string, campaignId: string): Promise<void> {
   const client = await setup();
 
   console.log('Fetching campaign data...');
   const { data: campaignData, error: campaignError } = await client.GET(
     '/api/public/campaigns/{campaign_id}',
-    { params: { path: { campaign_id: CYCLETHON_5_CAMPAIGN_ID } } },
+    { params: { path: { campaign_id: campaignId } } },
   );
 
   if (campaignError) {
@@ -75,11 +75,11 @@ export async function buildStats(): Promise<void> {
   };
 
   console.log('Downloading donations-full.json...');
-  const full = await downloadJSON<FullData>(R2_KEY_FULL);
+  const full = await downloadJSON<FullData>(r2KeyFull(eventKey));
 
   if (!full || full.donations.length === 0) {
     console.log('No donations found — uploading campaign snapshot only.');
-    await uploadJSON(R2_KEY_STATS, {
+    await uploadJSON(r2KeyStats(eventKey), {
       _meta: {
         generated_at: new Date().toISOString(),
         timezone: 'Asia/Tokyo',
@@ -150,15 +150,21 @@ export async function buildStats(): Promise<void> {
     },
   };
 
-  await uploadJSON(R2_KEY_STATS, output);
-  console.log(`Uploaded ${R2_KEY_STATS} (${dailyTotals.length} day(s)).`);
+  const statsKey = r2KeyStats(eventKey);
+  await uploadJSON(statsKey, output);
+  console.log(`Uploaded ${statsKey} (${dailyTotals.length} day(s)).`);
 }
 
-// Standalone runner
+// Standalone runner — operates on the currently live event, if any.
 if (import.meta.filename === process.argv[1]) {
   console.log(`[START] ${new Date().toISOString()}`);
   try {
-    await buildStats();
+    if (!CURRENT_LIVE_EVENT_KEY) {
+      console.log('No live event configured — nothing to build stats for.');
+    } else {
+      const event = getEvent(CURRENT_LIVE_EVENT_KEY);
+      await buildStats(event.key, event.campaignId);
+    }
     console.log(`[END]   ${new Date().toISOString()}`);
   } catch (err) {
     console.error('Error:', err);

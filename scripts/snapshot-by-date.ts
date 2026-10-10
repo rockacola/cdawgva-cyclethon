@@ -1,21 +1,25 @@
 /**
- * Generate daily donation snapshots for completed JST days during the event.
+ * Generate per-day donation snapshots for an event.
  *
- * For each day in the event range (2026-04-05 ~ 2026-04-19 JST), if the day
- * has ended and a snapshot doesn't already exist on R2, filter donations from
- * donations-full.json and upload a snapshot as donations-YYYY-MM-DD.json.
+ * `buildDailySnapshots` is the shared core: given an event key and a list of candidate dates,
+ * skip any that already have a snapshot on R2, then filter donations-full.json and upload the
+ * rest as donations-YYYY-MM-DD.json.
  *
  * The output format matches donations-latest-100.json: { generated_at, donations }.
  *
- * Called from fetch-donations.ts as part of the refresh pipeline.
- * Can also be run standalone: npm run build-stats -- (see package.json for the direct node invocation)
+ * `getCompletedDates` is the live-pipeline helper: given an event's liveWindow, return the dates
+ * within it that have fully ended in JST (strictly before today). Called from fetch-donations.ts,
+ * and from the standalone runner below for the currently live event.
+ *
+ * archive-event.ts does not use `getCompletedDates` — it derives its date range directly from the
+ * donations it fetched, since a completed event has no "today" cutoff to worry about.
  */
 
 import 'dotenv/config';
 
-import { EVENT_END, EVENT_START } from './lib/campaign.ts';
+import { CURRENT_LIVE_EVENT_KEY, getEvent } from './lib/campaign.ts';
 import { downloadJSON, uploadJSON } from './lib/data-store.ts';
-import { R2_KEY_FULL, r2KeyForDate } from './lib/r2-keys.ts';
+import { r2KeyForDate, r2KeyFull } from './lib/r2-keys.ts';
 import type { SavedDonation } from './lib/types.ts';
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000; // UTC+9
@@ -47,10 +51,10 @@ function getNowJstDateString(): string {
   return nowJst.toISOString().slice(0, 10);
 }
 
-function getEventDates(): string[] {
+function getJstDateRange(startDate: string, endDate: string): string[] {
   const dates: string[] = [];
-  const start = new Date(EVENT_START);
-  const end = new Date(EVENT_END);
+  const start = new Date(startDate);
+  const end = new Date(endDate);
 
   for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
     dates.push(d.toISOString().slice(0, 10));
@@ -59,22 +63,24 @@ function getEventDates(): string[] {
   return dates;
 }
 
-export async function buildDailySnapshots(): Promise<void> {
+export function getCompletedDates(start: string, end: string): string[] {
   const todayJst = getNowJstDateString();
-  const allDates = getEventDates();
+  return getJstDateRange(start, end).filter((date) => date < todayJst);
+}
 
-  // Only process days that have fully ended in JST (strictly before today)
-  const completedDates = allDates.filter((date) => date < todayJst);
-
-  if (completedDates.length === 0) {
-    console.log('No completed event days to snapshot yet.');
+export async function buildDailySnapshots(
+  eventKey: string,
+  candidateDates: string[],
+): Promise<void> {
+  if (candidateDates.length === 0) {
+    console.log('No event days to snapshot.');
     return;
   }
 
   // Check which snapshots already exist on R2
   const datesToGenerate: string[] = [];
-  for (const date of completedDates) {
-    const existing = await downloadJSON<DailySnapshot>(r2KeyForDate(date));
+  for (const date of candidateDates) {
+    const existing = await downloadJSON<DailySnapshot>(r2KeyForDate(eventKey, date));
     if (existing) {
       console.log(`  Snapshot for ${date} already exists, skipping.`);
     } else {
@@ -89,7 +95,7 @@ export async function buildDailySnapshots(): Promise<void> {
 
   // Download full donations once
   console.log('Downloading donations-full.json...');
-  const full = await downloadJSON<FullData>(R2_KEY_FULL);
+  const full = await downloadJSON<FullData>(r2KeyFull(eventKey));
 
   if (!full || full.donations.length === 0) {
     console.log('No donations found — skipping daily snapshots.');
@@ -110,17 +116,26 @@ export async function buildDailySnapshots(): Promise<void> {
       donations: filtered,
     };
 
-    const key = r2KeyForDate(date);
+    const key = r2KeyForDate(eventKey, date);
     await uploadJSON(key, snapshot);
     console.log(`  Uploaded ${key} (${filtered.length} donations).`);
   }
 }
 
-// Standalone runner
+// Standalone runner — operates on the currently live event, if any.
 if (import.meta.filename === process.argv[1]) {
   console.log(`[START] ${new Date().toISOString()}`);
   try {
-    await buildDailySnapshots();
+    if (!CURRENT_LIVE_EVENT_KEY) {
+      console.log('No live event configured — nothing to snapshot.');
+    } else {
+      const event = getEvent(CURRENT_LIVE_EVENT_KEY);
+      if (!event.liveWindow) {
+        throw new Error(`Live event "${event.key}" has no liveWindow configured.`);
+      }
+      const completedDates = getCompletedDates(event.liveWindow.start, event.liveWindow.end);
+      await buildDailySnapshots(event.key, completedDates);
+    }
     console.log(`[END]   ${new Date().toISOString()}`);
   } catch (err) {
     console.error('Error:', err);

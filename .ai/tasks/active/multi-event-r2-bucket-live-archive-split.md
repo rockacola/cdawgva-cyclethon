@@ -1,8 +1,15 @@
 # Multi-event R2 bucket, live/archive pipeline split
 
-Status: planned. Not yet implemented, no code changed. This is the write-up from a planning
-discussion with the operator on 2026-10-10; see `.ai/journal/2026/2026-10-10.md` for the decision
-log.
+Status: code complete, not yet rolled out. The file-level plan below (registry, key builders,
+`build-stats.ts`/`snapshot-by-date.ts` generalization, `archive-event.ts`, `fetch-donations.ts`,
+housekeeping) is implemented and verified: `npm run check` passes clean, `DATA_STORE=local npm run
+fetch-donations` no-ops correctly with `CURRENT_LIVE_EVENT_KEY` null, and `DATA_STORE=local npm run
+archive-event -- cyclethon-1` ran end-to-end against the real Tiltify API (7770 donations, correct
+per-event-prefixed output, daily snapshot date range correctly derived from the data with no
+hardcoded window). Not committed yet. Still open: the rollout steps below that happen outside this
+repo (creating the real `cdawgva` R2 bucket, updating secrets, running `archive-event` against real
+R2 for all five events, updating the web app). See `.ai/journal/2026/2026-10-10.md` for the original
+decision log from the planning discussion on 2026-10-10.
 
 ## Context
 
@@ -129,9 +136,9 @@ and no event is currently live.
 
 ## Open items
 
-- `archive-event.ts`'s guard against running on a `'live'` event (fail fast with a clear message) is
-  a good idea but not yet confirmed with the operator as a hard requirement, included here as the
-  default assumption.
+- `archive-event.ts`'s guard against running on a `'live'` event is implemented (exits 1 with a clear
+  message); still not explicitly confirmed with the operator as a hard requirement, just the default
+  assumption this was built on.
 
 ## Commit policy (per AGENTS.md)
 

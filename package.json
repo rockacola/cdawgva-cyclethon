@@ -13,6 +13,7 @@
     "check": "npm run format && npm run lint:fix && npm run typecheck",
     "generate:types": "openapi-typescript https://v5api.tiltify.com/api/public/openapi -o scripts/lib/types/api.ts",
     "fetch-donations": "node --disable-warning=ExperimentalWarning scripts/fetch-donations.ts",
+    "archive-event": "node --disable-warning=ExperimentalWarning scripts/archive-event.ts",
     "build-stats": "node --disable-warning=ExperimentalWarning scripts/build-stats.ts",
     "get-user-by-slug": "node --disable-warning=ExperimentalWarning scripts/get-user-by-slug.ts",
     "get-user-campaigns": "node --disable-warning=ExperimentalWarning scripts/get-user-campaigns.ts",

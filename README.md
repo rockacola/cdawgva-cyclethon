@@ -1,20 +1,21 @@
 # CDawgVA Cyclethon Data Pipeline
 
-A production data pipeline that continuously fetches live donation data from the [Tiltify API](https://developers.tiltify.com/), deduplicates and aggregates it, and publishes structured JSON files to Cloudflare R2. Built to power a real-time donation dashboard for the [CDawgVA Cyclethon 5](https://tiltify.com/@cdawgva/cyclethon-5) charity fundraiser.
+A data pipeline that fetches donation data from the [Tiltify API](https://developers.tiltify.com/), deduplicates and aggregates it, and publishes structured JSON files to Cloudflare R2. Built to power a donation dashboard for the [CDawgVA Cyclethon](https://tiltify.com/@cdawgva) charity fundraisers, and generalised to hold every CDawgVA donation event, past or future, in one bucket.
 
 The companion web app that consumes this data lives in a separate repo: [cdawgva-cyclethon-app](https://github.com/rockacola/cdawgva-cyclethon-app). See it live at [cdawgva-cyclethon.vercel.app](https://cdawgva-cyclethon.vercel.app/).
 
 ## Demo / Output
 
-The pipeline produces several JSON files published to Cloudflare R2:
+The pipeline produces several JSON files published to Cloudflare R2, each prefixed with an event's canonical
+key, e.g. `cyclethon-5/donations-full.json`:
 
 | File                        | Description                                                 |
 | --------------------------- | ----------------------------------------------------------- |
-| `donations-full.json`       | Complete donation history (source of truth)                 |
+| `donations-full.json`       | Complete donation history for the event (source of truth)   |
 | `donations-latest-100.json` | Most recent 100 donations (optimised for fast webapp loads) |
 | `donations-latest-500.json` | Most recent 500 donations                                   |
 | `donations-stats.json`      | Daily totals, cumulative totals, and campaign progress      |
-| `donations-YYYY-MM-DD.json` | Per-day snapshots for each completed event day (JST)        |
+| `donations-YYYY-MM-DD.json` | Per-day snapshot for each completed event day (JST)         |
 
 Example donation record:
 
@@ -35,36 +36,55 @@ Example donation record:
 - **Runtime**: Node.js 24
 - **API Client**: `openapi-fetch` with auto-generated types from Tiltify's OpenAPI spec
 - **Cloud Storage**: Cloudflare R2 via AWS S3 SDK (`@aws-sdk/client-s3`)
-- **CI/CD**: GitHub Actions (5-minute cron schedule)
+- **CI/CD**: GitHub Actions, triggered externally by cron-job.org
 - **Code Quality**: ESLint + Prettier + `tsc --noEmit` type checking
 
 ## Architecture
 
+Two pipelines write into the same bucket: a recurring **live** pipeline for whichever event is currently
+running, and a one-shot **archive** pipeline for backfilling a completed event's full history.
+
 ```text
-                          every N min
-                     ┌───────────────────┐
-                     │  GitHub Actions   │
-                     │  (cron trigger)   │
-                     └────────┬──────────┘
-                              │
-                              v
-┌──────────┐    fetch    ┌──────────────────────────┐    publish   ┌───────────┐
-│ Tiltify  │ ─────────>  │  Pipeline                │ ──────────>  │ Cloudflare│
-│ API      │  new        │                          │  JSON files  │ R2        │
-└──────────┘  donations  │  1. Download existing    │              └─────┬─────┘
-                         │  2. Fetch new (paginated)│                    │
-                         │  3. Merge + deduplicate  │                    │ read
-                         │  4. Build stats/snapshots│                    v
-                         │  5. Upload all datasets  │              ┌──────────────┐
-                         └──────────────────────────┘              │ Web App      │
-                                                                   │ (30s poll)   │
-                                                                   │ on Vercel    │
-                                                                   └──────────────┘
+      cron-job.org (external)
+              │
+              v
+   ┌──────────────────────────┐
+   │ GitHub Actions             │
+   │ (workflow_dispatch)        │
+   └─────────────┬──────────────┘
+                 │
+                 v
+┌──────────┐  fetch   ┌────────────────────────────┐
+│ Tiltify  │ ───────> │ Live pipeline                │
+│ API      │          │ (fetch-donations.ts)         │
+└──────────┘          │ for CURRENT_LIVE_EVENT_KEY    │
+                       └─────────────┬────────────────┘
+                                     │
+┌──────────┐  fetch   ┌──────────────┴─────────────┐
+│ Tiltify  │ ───────> │ Archive pipeline              │
+│ API      │          │ (archive-event.ts)            │
+└──────────┘          │ one event, run on demand       │
+    (manual, local)   └─────────────┬─────────────────┘
+                                     │ publish JSON
+                                     v
+                       ┌────────────────────────────┐
+                       │ Cloudflare R2                 │
+                       │ bucket: cdawgva                │
+                       │ <event-key>/donations-*.json   │
+                       └─────────────┬─────────────────┘
+                                     │ read
+                                     v
+                              ┌───────────────┐
+                              │ Web App        │
+                              │ (30s poll)     │
+                              │ on Vercel      │
+                              └───────────────┘
 ```
 
-**Pipeline steps** (runs in [`fetch-donations.ts`](scripts/fetch-donations.ts)):
+**Live pipeline steps** (runs in [`fetch-donations.ts`](scripts/fetch-donations.ts), tracks whichever event
+`CURRENT_LIVE_EVENT_KEY` points at, no-ops cleanly if that's `null`):
 
-1. **Download** the existing full dataset from R2
+1. **Download** the existing full dataset for the event from R2
 2. **Determine fetch window** using the latest donation timestamp minus a 30-second overlap buffer to avoid missing edge cases during donation bursts
 3. **Paginate** through the Tiltify API using cursor-based pagination (100 per page)
 4. **Save** a local snapshot of the raw API response as backup
@@ -72,6 +92,14 @@ Example donation record:
 6. **Sort** by completion time (descending) and upload full + sliced datasets to R2
 7. **Build aggregated stats** with daily totals grouped by currency and cumulative running totals (JST timezone)
 8. **Build daily snapshots**, one file per completed event day
+
+**Archive pipeline steps** (runs in [`archive-event.ts`](scripts/archive-event.ts), run once per completed
+event, refuses to run against an event that isn't marked `archived`):
+
+1. **Paginate** the entire donation history for the event in one pass, no incremental merge
+2. **Sort** by completion time (descending) and upload full + latest-100/500 datasets to R2
+3. **Build aggregated stats**, same as the live pipeline
+4. **Build daily snapshots**, date range derived from the donations' own timestamps
 
 ## Key Features
 
@@ -152,7 +180,8 @@ Uploaded donations-latest-100.json (100 donations).
 ### Other Commands
 
 ```bash
-npm run build-stats                            # Rebuild stats file independently
+npm run archive-event -- <event-key>           # Archive pipeline: backfill a completed event (see EVENTS in scripts/lib/campaign.ts)
+npm run build-stats                            # Rebuild stats file for the live event independently
 npm run get-user-by-slug -- <slug>             # Exploration: look up a Tiltify user by slug
 npm run get-user-campaigns -- <user_id>        # Exploration: list a user's campaigns
 npm run get-campaign -- <campaign_id>          # Exploration: fetch a campaign by ID
@@ -176,14 +205,14 @@ node --disable-warning=ExperimentalWarning scripts/get-campaign.ts <id> > data/o
 ## Project Structure
 
 ```text
-.github/workflows/refresh.yml      GitHub Actions pipeline (5-min cron)
+.github/workflows/refresh.yml      GitHub Actions workflow, triggered externally by cron-job.org
 bin/
   refresh.sh                        Local manual pipeline trigger (forces DATA_STORE=r2)
-  backup-r2.sh                      R2 backup utility (cron; not currently scheduled anywhere)
 scripts/
-  fetch-donations.ts                Core pipeline: fetch, merge, dedup, upload
-  build-stats.ts                    Daily aggregation and campaign stats
-  snapshot-by-date.ts               Per-day donation snapshots (JST)
+  fetch-donations.ts                Live pipeline: fetch, merge, dedup, upload, for CURRENT_LIVE_EVENT_KEY
+  archive-event.ts                  Archive pipeline: one-shot backfill for a completed event
+  build-stats.ts                    Daily aggregation and campaign stats, takes an event key + campaign ID
+  snapshot-by-date.ts               Per-day donation snapshots (JST), shared by both pipelines
   get-user-by-slug.ts               Exploration script
   get-user-campaigns.ts             Exploration script
   get-campaign.ts                   Exploration script
@@ -191,17 +220,17 @@ scripts/
   lib/
     auth.ts                         OAuth token acquisition
     client.ts                       Typed HTTP client (openapi-fetch)
-    campaign.ts                     Campaign/event identifiers
+    campaign.ts                     Event registry (EVENTS) and CURRENT_LIVE_EVENT_KEY
     data-store.ts                   DATA_STORE switch: local-store.ts or r2.ts
     local-store.ts                  Local filesystem backend (data/output/)
     r2.ts                           Cloudflare R2 backend
-    r2-keys.ts                      Dataset filenames shared across the pipeline
+    r2-keys.ts                      Per-event-prefixed dataset key builders
     setup.ts                        Bootstrap (env + auth)
     types.ts                        Data models
     constants.ts                    API URLs and data/ directory paths
     format-timestamp.ts             Shared timestamp formatting util
     types/api.ts                    Auto-generated Tiltify API types
-data/                                Gitignored local data (output/, inbox/, logs/, errors/, backups/)
+data/                                Gitignored local data (output/, inbox/, logs/, errors/)
 .env.example                        Credential and config template
 ```
 
@@ -210,5 +239,4 @@ data/                                Gitignored local data (output/, inbox/, log
 - **WebSocket or webhook integration**: replace polling with push-based updates for sub-5-minute latency
 - **Automated tests**: add integration tests for the merge/dedup logic and stats aggregation
 - **Historical analytics**: time-series visualisation of donation velocity and patterns
-- **Multi-campaign support**: generalise the pipeline to track multiple Tiltify campaigns
 - **Alerting**: notify on pipeline failures or unusual donation patterns

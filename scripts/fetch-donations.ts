@@ -2,16 +2,16 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 import { buildStats } from './build-stats.ts';
-import { CYCLETHON_5_CAMPAIGN_ID } from './lib/campaign.ts';
+import { CURRENT_LIVE_EVENT_KEY, getEvent } from './lib/campaign.ts';
 import type { createApiClient } from './lib/client.ts';
 import { OUTPUT_DIR } from './lib/constants.ts';
 import { downloadJSON, uploadJSON } from './lib/data-store.ts';
 import { formatTimestamp } from './lib/format-timestamp.ts';
-import { R2_KEY_FULL, R2_KEY_LATEST_100, R2_KEY_LATEST_500 } from './lib/r2-keys.ts';
+import { r2KeyFull, r2KeyLatest100, r2KeyLatest500 } from './lib/r2-keys.ts';
 import { setup } from './lib/setup.ts';
 import type { components } from './lib/types/api.ts';
 import type { DonationsSnapshot, SavedDonation } from './lib/types.ts';
-import { buildDailySnapshots } from './snapshot-by-date.ts';
+import { buildDailySnapshots, getCompletedDates } from './snapshot-by-date.ts';
 
 type ApiDonation = components['schemas']['Donation'] & { created_at?: string };
 type TiltifyClient = ReturnType<typeof createApiClient>;
@@ -29,7 +29,11 @@ interface LatestData {
   donations: SavedDonation[];
 }
 
-async function fetchNewDonations(client: TiltifyClient, since?: string): Promise<SavedDonation[]> {
+async function fetchNewDonations(
+  client: TiltifyClient,
+  campaignId: string,
+  since?: string,
+): Promise<SavedDonation[]> {
   const all: SavedDonation[] = [];
   let cursor: string | null = null;
   let page = 1;
@@ -39,7 +43,7 @@ async function fetchNewDonations(client: TiltifyClient, since?: string): Promise
 
     const { data, error } = await client.GET('/api/public/campaigns/{campaign_id}/donations', {
       params: {
-        path: { campaign_id: CYCLETHON_5_CAMPAIGN_ID },
+        path: { campaign_id: campaignId },
         query: {
           limit: LIMIT,
           ...(since ? { completed_after: since } : {}),
@@ -74,13 +78,21 @@ async function fetchNewDonations(client: TiltifyClient, since?: string): Promise
 
 console.log(`[START] ${new Date().toISOString()}`);
 
+if (!CURRENT_LIVE_EVENT_KEY) {
+  console.log('No live event configured (CURRENT_LIVE_EVENT_KEY is null) — nothing to fetch.');
+  console.log(`[END]   ${new Date().toISOString()}`);
+  process.exit(0);
+}
+
+const event = getEvent(CURRENT_LIVE_EVENT_KEY);
+
 try {
   const fetchedAt = new Date();
   const client = await setup();
 
   // Step 1: Download existing full data from R2
   console.log('Downloading existing donations...');
-  const existing = await downloadJSON<FullData>(R2_KEY_FULL);
+  const existing = await downloadJSON<FullData>(r2KeyFull(event.key));
   const existingDonations: SavedDonation[] = existing?.donations ?? [];
   console.log(`${existingDonations.length} existing donations loaded.`);
 
@@ -95,7 +107,7 @@ try {
   }
 
   // Step 3: Fetch new donations from Tiltify (cursor-based, all pages)
-  const newDonations = await fetchNewDonations(client, since);
+  const newDonations = await fetchNewDonations(client, event.campaignId, since);
   console.log(`Fetched ${newDonations.length} donation(s) from API.`);
 
   // Step 4: Save raw snapshot locally as backup
@@ -104,7 +116,7 @@ try {
     donations: newDonations,
   };
   fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-  const filename = `donations_${formatTimestamp(fetchedAt)}.json`;
+  const filename = `donations_${event.key}_${formatTimestamp(fetchedAt)}.json`;
   const outputPath = path.join(OUTPUT_DIR, filename);
   fs.writeFileSync(outputPath, JSON.stringify(snapshot, null, 2), 'utf-8');
   console.log(`Local snapshot saved to ${outputPath}`);
@@ -130,13 +142,14 @@ try {
     updated_at: fetchedAt.toISOString(),
     donations: merged,
   };
-  await uploadJSON(R2_KEY_FULL, fullData);
-  console.log(`Uploaded ${R2_KEY_FULL} (${merged.length} donations).`);
+  const fullKey = r2KeyFull(event.key);
+  await uploadJSON(fullKey, fullData);
+  console.log(`Uploaded ${fullKey} (${merged.length} donations).`);
 
   // Step 7: Upload latest slices to R2 (what the webapp fetches)
   for (const [key, limit] of [
-    [R2_KEY_LATEST_100, 100],
-    [R2_KEY_LATEST_500, 500],
+    [r2KeyLatest100(event.key), 100],
+    [r2KeyLatest500(event.key), 500],
   ] as [string, number][]) {
     const latestData: LatestData = {
       generated_at: fetchedAt.toISOString(),
@@ -147,11 +160,16 @@ try {
   }
 
   // Step 8: Build and upload donation stats (daily totals, cumulative, grouped by JST date)
-  await buildStats();
+  await buildStats(event.key, event.campaignId);
 
   // Step 9: Build and upload daily donation snapshots for completed event days (JST)
   console.log('Building daily snapshots...');
-  await buildDailySnapshots();
+  if (event.liveWindow) {
+    const completedDates = getCompletedDates(event.liveWindow.start, event.liveWindow.end);
+    await buildDailySnapshots(event.key, completedDates);
+  } else {
+    console.log(`No liveWindow configured for "${event.key}" — skipping daily snapshots.`);
+  }
 
   console.log(`[END]   ${new Date().toISOString()}`);
 } catch (err) {
