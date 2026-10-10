@@ -1,15 +1,14 @@
 # Multi-event R2 bucket, live/archive pipeline split
 
-Status: code complete, not yet rolled out. The file-level plan below (registry, key builders,
-`build-stats.ts`/`snapshot-by-date.ts` generalization, `archive-event.ts`, `fetch-donations.ts`,
-housekeeping) is implemented and verified: `npm run check` passes clean, `DATA_STORE=local npm run
-fetch-donations` no-ops correctly with `CURRENT_LIVE_EVENT_KEY` null, and `DATA_STORE=local npm run
-archive-event -- cyclethon-1` ran end-to-end against the real Tiltify API (7770 donations, correct
-per-event-prefixed output, daily snapshot date range correctly derived from the data with no
-hardcoded window). Not committed yet. Still open: the rollout steps below that happen outside this
-repo (creating the real `cdawgva` R2 bucket, updating secrets, running `archive-event` against real
-R2 for all five events, updating the web app). See `.ai/journal/2026/2026-10-10.md` for the original
-decision log from the planning discussion on 2026-10-10.
+Status: done, as far as this repo is concerned. Code landed in `66fdcc0`. The operator created the
+real `cdawgva` R2 bucket, put its credentials in `.env`, and `archive-event` has been run with
+`DATA_STORE=r2` for all five events against that real bucket, verified by direct download (see
+`.ai/journal/2026/2026-10-10.md` for the per-event donation counts and totals). The GitHub Actions
+secrets `R2_ACCESS_KEY_ID`, `R2_BUCKET_NAME`, and `R2_SECRET_ACCESS_KEY` have since been updated to
+match (`R2_ACCOUNT_ID` unchanged, correctly, since the Cloudflare account itself didn't change).
+Pointing the web app (`cdawgva-cyclethon-app`) at the new bucket/key layout was always out of scope
+for this repo (see the rollout order below) and the operator is tracking it as a separate task in
+that repo.
 
 ## Context
 
