@@ -164,7 +164,7 @@ npm run typecheck               # Type check without compiling
 npm run generate:types          # Regenerate types from Tiltify OpenAPI spec
 ```
 
-The exploration scripts were used during initial development to discover campaign and user IDs; they're kept around as handy one-offs for inspecting the Tiltify API directly.
+The exploration scripts were used during initial development to discover campaign and user IDs; they're kept around as handy one-offs for inspecting the Tiltify API directly. Each one also saves its raw response under `data/output/exploration/` for later review.
 
 ## Project Structure
 
@@ -194,6 +194,7 @@ scripts/
     types.ts                        Data models
     constants.ts                    API URLs and data/ directory paths
     format-timestamp.ts             Shared timestamp formatting util
+    exploration.ts                  Saves exploration script responses to data/output/exploration/
     types/api.ts                    Auto-generated Tiltify API types
 data/                                Gitignored local data (output/, inbox/)
 .env.example                        Credential and config template

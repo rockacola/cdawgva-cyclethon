@@ -64,6 +64,9 @@ of your local `.env` — their whole purpose is driving the real pipeline.
 | `npm run check`                  | Runs format + lint:fix + typecheck (pre-commit)  |
 | `npm run generate:types`         | Regenerate types from Tiltify OpenAPI spec       |
 
+Each exploration script prints its result and also saves the raw API response under
+`data/output/exploration/<script-name>_<timestamp>.json` for later review.
+
 ## Code quality
 
 Three tools enforce code quality:
@@ -105,9 +108,11 @@ scripts/
     types.ts                        Data models
     constants.ts                    API URLs and data/ directory paths
     format-timestamp.ts             Shared timestamp formatting util
+    exploration.ts                  Saves exploration script responses to data/output/exploration/
     types/api.ts                    Auto-generated Tiltify API types
 data/
   output/                           Local raw snapshot backups, plus the DATA_STORE=local destination (gitignored)
+    exploration/                    Raw API responses from exploration scripts, one file per run
   inbox/                            Scaffolded for future manual input files (gitignored, unused)
 .env.example                        Credential and config template
 ```
