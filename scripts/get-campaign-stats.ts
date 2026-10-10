@@ -26,7 +26,7 @@ try {
     throw new Error('No campaign data returned');
   }
 
-  console.log('campaign:', campaign);
+  console.log(JSON.stringify(campaign, null, 2));
 } catch (err) {
   console.error('Error:', err);
   process.exit(1);
