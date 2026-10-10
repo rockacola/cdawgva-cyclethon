@@ -1,6 +1,6 @@
 {
   "name": "cdawgva-cyclethon",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Fetches live donation data from the Tiltify API and publishes it to Cloudflare R2 for the CDawgVA Cyclethon donation dashboard",
   "private": true,
   "type": "module",
