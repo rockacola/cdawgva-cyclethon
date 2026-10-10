@@ -47,26 +47,31 @@ of your local `.env` — their whole purpose is driving the real pipeline.
 
 ## Available scripts
 
-| Script                           | Description                                      |
-| -------------------------------- | ------------------------------------------------ |
-| `npm run fetch-donations`        | Core pipeline: fetch, merge, dedup, upload to R2 |
-| `npm run build-stats`            | Rebuild the stats JSON independently             |
-| `npm run get-user-by-slug`       | Exploration: look up a Tiltify user by slug      |
-| `npm run get-user-campaigns`     | Exploration: list a user's campaigns             |
-| `npm run get-campaign`           | Exploration: fetch a campaign by ID              |
-| `npm run get-campaign-stats`     | Exploration: fetch a campaign's live stats       |
-| `npm run get-campaign-donations` | Exploration: list a campaign's donations         |
-| `npm run lint`                   | Report ESLint issues                             |
-| `npm run lint:fix`               | Auto-fix ESLint issues                           |
-| `npm run format`                 | Auto-format with Prettier                        |
-| `npm run format:check`           | Check formatting without writing                 |
-| `npm run typecheck`              | TypeScript type check                            |
-| `npm run check`                  | Runs format + lint:fix + typecheck (pre-commit)  |
-| `npm run generate:types`         | Regenerate types from Tiltify OpenAPI spec       |
+| Script                                            | Description                                      |
+| ------------------------------------------------- | ------------------------------------------------ |
+| `npm run fetch-donations`                         | Core pipeline: fetch, merge, dedup, upload to R2 |
+| `npm run build-stats`                             | Rebuild the stats JSON independently             |
+| `npm run get-user-by-slug -- <slug>`              | Exploration: look up a Tiltify user by slug      |
+| `npm run get-user-campaigns -- <user_id>`         | Exploration: list a user's campaigns             |
+| `npm run get-campaign -- <campaign_id>`           | Exploration: fetch a campaign by ID              |
+| `npm run get-campaign-stats -- <campaign_id>`     | Exploration: fetch a campaign's live stats       |
+| `npm run get-campaign-donations -- <campaign_id>` | Exploration: list a campaign's donations         |
+| `npm run lint`                                    | Report ESLint issues                             |
+| `npm run lint:fix`                                | Auto-fix ESLint issues                           |
+| `npm run format`                                  | Auto-format with Prettier                        |
+| `npm run format:check`                            | Check formatting without writing                 |
+| `npm run typecheck`                               | TypeScript type check                            |
+| `npm run check`                                   | Runs format + lint:fix + typecheck (pre-commit)  |
+| `npm run generate:types`                          | Regenerate types from Tiltify OpenAPI spec       |
 
-Each exploration script prints its result and also saves the raw API response under
-`data/output/exploration/<script-name>_<slug>_<timestamp>.json` for later review (the slug identifies
-which user/campaign was queried, since more than one will be tracked over time).
+Exploration scripts are generic — they take whatever slug/ID you pass and print the raw API response to
+stdout, with progress messages on stderr so stdout stays clean JSON. They don't save anything themselves;
+redirect or capture the output yourself if you want to keep it. Use the direct `node` invocation for this,
+not `npm run`, since `npm run` prints its own banner to stdout and would corrupt the redirected JSON:
+
+```bash
+node --disable-warning=ExperimentalWarning scripts/get-campaign.ts <id> > data/output/campaign-<name>.json
+```
 
 ## Code quality
 
@@ -109,11 +114,9 @@ scripts/
     types.ts                        Data models
     constants.ts                    API URLs and data/ directory paths
     format-timestamp.ts             Shared timestamp formatting util
-    exploration.ts                  Saves exploration script responses to data/output/exploration/
     types/api.ts                    Auto-generated Tiltify API types
 data/
   output/                           Local raw snapshot backups, plus the DATA_STORE=local destination (gitignored)
-    exploration/                    Raw API responses from exploration scripts, one file per run
   inbox/                            Scaffolded for future manual input files (gitignored, unused)
   logs/, errors/                    bin/refresh.sh output (gitignored)
   backups/                          bin/backup-r2.sh output (gitignored)

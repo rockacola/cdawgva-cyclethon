@@ -1,12 +1,19 @@
-import { CDAWGVA_SLUG, CDAWGVA_USER_ID } from './lib/campaign.ts';
-import { saveExploration } from './lib/exploration.ts';
+// Usage: npm run get-user-campaigns -- <user_id>
+
 import { setup } from './lib/setup.ts';
+
+const userId = process.argv[2];
+
+if (!userId) {
+  console.error('Usage: npm run get-user-campaigns -- <user_id>');
+  process.exit(1);
+}
 
 try {
   const client = await setup();
 
   const { data, error } = await client.GET('/api/public/users/{user_id}/campaigns', {
-    params: { path: { user_id: CDAWGVA_USER_ID } },
+    params: { path: { user_id: userId } },
   });
 
   if (error) {
@@ -14,7 +21,6 @@ try {
   }
 
   console.log(JSON.stringify(data, null, 2));
-  console.log(`Saved to ${saveExploration('get-user-campaigns', CDAWGVA_SLUG, data)}`);
 } catch (err) {
   console.error('Error:', err);
   process.exit(1);

@@ -1,12 +1,19 @@
-import { CYCLETHON_5_CAMPAIGN_ID, CYCLETHON_5_SLUG } from './lib/campaign.ts';
-import { saveExploration } from './lib/exploration.ts';
+// Usage: npm run get-campaign-stats -- <campaign_id>
+
 import { setup } from './lib/setup.ts';
+
+const campaignId = process.argv[2];
+
+if (!campaignId) {
+  console.error('Usage: npm run get-campaign-stats -- <campaign_id>');
+  process.exit(1);
+}
 
 try {
   const client = await setup();
 
   const { data, error } = await client.GET('/api/public/campaigns/{campaign_id}', {
-    params: { path: { campaign_id: CYCLETHON_5_CAMPAIGN_ID } },
+    params: { path: { campaign_id: campaignId } },
   });
 
   if (error) {
@@ -20,7 +27,6 @@ try {
   }
 
   console.log('campaign:', campaign);
-  console.log(`Saved to ${saveExploration('get-campaign-stats', CYCLETHON_5_SLUG, campaign)}`);
 } catch (err) {
   console.error('Error:', err);
   process.exit(1);

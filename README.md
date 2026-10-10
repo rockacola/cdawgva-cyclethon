@@ -152,19 +152,27 @@ Uploaded donations-latest-100.json (100 donations).
 ### Other Commands
 
 ```bash
-npm run build-stats            # Rebuild stats file independently
-npm run get-user-by-slug       # Exploration: look up a Tiltify user by slug
-npm run get-user-campaigns     # Exploration: list a user's campaigns
-npm run get-campaign           # Exploration: fetch a campaign by ID
-npm run get-campaign-stats     # Exploration: fetch a campaign's live stats
-npm run get-campaign-donations # Exploration: list a campaign's donations
-npm run lint                   # Run ESLint
-npm run format                 # Auto-format with Prettier
-npm run typecheck               # Type check without compiling
-npm run generate:types          # Regenerate types from Tiltify OpenAPI spec
+npm run build-stats                            # Rebuild stats file independently
+npm run get-user-by-slug -- <slug>             # Exploration: look up a Tiltify user by slug
+npm run get-user-campaigns -- <user_id>        # Exploration: list a user's campaigns
+npm run get-campaign -- <campaign_id>          # Exploration: fetch a campaign by ID
+npm run get-campaign-stats -- <campaign_id>    # Exploration: fetch a campaign's live stats
+npm run get-campaign-donations -- <campaign_id> # Exploration: list a campaign's donations
+npm run lint                                   # Run ESLint
+npm run format                                 # Auto-format with Prettier
+npm run typecheck                              # Type check without compiling
+npm run generate:types                         # Regenerate types from Tiltify OpenAPI spec
 ```
 
-The exploration scripts were used during initial development to discover campaign and user IDs; they're kept around as handy one-offs for inspecting the Tiltify API directly. Each one also saves its raw response under `data/output/exploration/` for later review.
+The exploration scripts are generic — they take whatever slug/ID you pass and print the raw API response to
+stdout (progress messages go to stderr, so stdout stays clean JSON you can redirect). They were used during
+initial development to discover campaign and user IDs, and stay useful for the same purpose on future
+campaigns. They don't save anything themselves; use the direct `node` invocation if you want to redirect
+output to a file, since `npm run` prints its own banner to stdout:
+
+```bash
+node --disable-warning=ExperimentalWarning scripts/get-campaign.ts <id> > data/output/campaign-<name>.json
+```
 
 ## Project Structure
 
@@ -194,7 +202,6 @@ scripts/
     types.ts                        Data models
     constants.ts                    API URLs and data/ directory paths
     format-timestamp.ts             Shared timestamp formatting util
-    exploration.ts                  Saves exploration script responses to data/output/exploration/
     types/api.ts                    Auto-generated Tiltify API types
 data/                                Gitignored local data (output/, inbox/, logs/, errors/, backups/)
 .env.example                        Credential and config template

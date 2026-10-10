@@ -13,9 +13,9 @@ export async function setup() {
     throw new Error('TILTIFY_CLIENT_ID and TILTIFY_CLIENT_SECRET must be set in .env');
   }
 
-  console.log('Fetching access token...');
+  console.error('Fetching access token...');
   const { access_token, expires_in } = await getAccessToken(clientId, clientSecret);
-  console.log(`Access token obtained (expires in ${expires_in}s).`);
+  console.error(`Access token obtained (expires in ${expires_in}s).`);
 
   return createApiClient(access_token);
 }
