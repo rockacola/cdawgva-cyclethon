@@ -1,6 +1,8 @@
 # Consolidate into a single root package, modernize to native-TS scripts
 
-Status: drafted, not yet approved for execution.
+Status: done. Implemented and committed (`028635d` "refactor: consolidate scripts into single root package"). Verified: fresh `npm install` (0 vulnerabilities), `npm run check` clean, read-only exploration scripts run live against the Tiltify API, and `npm run fetch-donations` run live end-to-end against production R2 (download/merge/upload, local snapshot write, stats, daily snapshots) — all successful, no errors.
+
+Still open (external to this repo, not something the task itself blocks on): update any real crontab/launchd entries pointing at the old `refresh.sh`, `backup-r2.sh`, or `scripts/tiltify-api/run.sh` paths to the new `bin/` equivalents.
 
 ## Context
 
